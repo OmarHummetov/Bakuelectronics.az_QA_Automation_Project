@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Baku Electronics Smoke Suite">
+    <listeners>
+        <listener class-name="az.bakuelectronics.automation.support.RetryAnnotationTransformer"/>
+        <listener class-name="az.bakuelectronics.automation.support.AllureTestNgGroupLabelListener"/>
+    </listeners>
+    <test name="UI Tests">
+        <classes>
+            <class name="az.bakuelectronics.automation.ui.AddToCartTest"/>
+            <class name="az.bakuelectronics.automation.ui.CartQuantityDecreaseTest"/>
+            <class name="az.bakuelectronics.automation.ui.CartQuantityIncreaseTest"/>
+            <class name="az.bakuelectronics.automation.ui.CartRemoveProductTest"/>
+            <class name="az.bakuelectronics.automation.ui.CartSmokeTest"/>
+            <class name="az.bakuelectronics.automation.ui.CategoryNavigationTest"/>
+            <class name="az.bakuelectronics.automation.ui.HomeSmokeTest"/>
+            <class name="az.bakuelectronics.automation.ui.LoginSmokeTest"/>
+            <class name="az.bakuelectronics.automation.ui.LoginTest"/>
+            <class name="az.bakuelectronics.automation.ui.NegativeSearchTest"/>
+            <class name="az.bakuelectronics.automation.ui.PaginationTest"/>
+            <class name="az.bakuelectronics.automation.ui.ProductBrandFilterTest"/>
+            <class name="az.bakuelectronics.automation.ui.ProductDetailsValidationTest"/>
+            <class name="az.bakuelectronics.automation.ui.ProductPriceFilterTest"/>
+            <class name="az.bakuelectronics.automation.ui.ProductSortingTest"/>
+            <class name="az.bakuelectronics.automation.ui.ProductTest"/>
+            <class name="az.bakuelectronics.automation.ui.SearchTest"/>
+        </classes>
+    </test>
+    <test name="Integration Tests">
+        <classes>
+            <class name="az.bakuelectronics.automation.integration.ProductApiUiIntegrationTest"/>
+            <class name="az.bakuelectronics.automation.integration.BasketApiToUiIntegrationTest"/>
+        </classes>
+    </test>
+    <test name="API Tests">
+        <classes>
+            <class name="az.bakuelectronics.automation.api.DefaultSearchResultTest"/>
+            <class name="az.bakuelectronics.automation.api.DefaultSearchResultContractTest"/>
+            <class name="az.bakuelectronics.automation.api.AddBasketTest"/>
+            <class name="az.bakuelectronics.automation.api.UpdateBasketTest"/>
+            <class name="az.bakuelectronics.automation.api.DeleteBasketTest"/>
+            <class name="az.bakuelectronics.automation.api.BasketResponseFieldsTest"/>
+            <class name="az.bakuelectronics.automation.api.UnauthorizedRequestTest"/>
+            <class name="az.bakuelectronics.automation.api.InvalidProductSlugTest"/>
+            <class name="az.bakuelectronics.automation.api.InvalidQuantityTest"/>
+        </classes>
+    </test>
+</suite>

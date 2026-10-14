@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Baku Electronics Parallel UI Pilot" parallel="classes" thread-count="2">
+    <listeners>
+        <listener class-name="az.bakuelectronics.automation.support.AllureTestNgGroupLabelListener"/>
+    </listeners>
+    <test name="Safe UI Pilot">
+        <classes>
+            <class name="az.bakuelectronics.automation.ui.HomeSmokeTest"/>
+            <class name="az.bakuelectronics.automation.ui.CategoryNavigationTest"/>
+            <class name="az.bakuelectronics.automation.ui.SearchTest"/>
+        </classes>
+    </test>
+</suite>
