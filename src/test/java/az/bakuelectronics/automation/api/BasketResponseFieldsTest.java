@@ -1,4 +1,6 @@
 package az.bakuelectronics.automation.api;
+import az.bakuelectronics.automation.support.api.ApiTestReporter;
+import az.bakuelectronics.automation.support.api.BasketTestSupport;
 
 import io.restassured.response.Response;
 import org.testng.ITestResult;
@@ -15,41 +17,40 @@ public class BasketResponseFieldsTest {
             "telefon-iphone-17-pro-max-2tb-cosmic-orange-222768";
 
     private final ApiClient apiClient = new ApiClient();
-    private boolean cleanupRequired;
+    private BasketTestSupport.BasketRestoreSession basketSession;
+    private String reportIdentity;
 
     @BeforeMethod(alwaysRun = true)
     public void lockBasketMutation() {
-        cleanupRequired = false;
-        BasketTestSupport.lock();
+        reportIdentity = ApiTestReporter.newInvocationIdentity(getClass().getSimpleName());
+        basketSession = BasketTestSupport.beginLocked(apiClient, getClass().getSimpleName());
     }
 
     @AfterMethod(alwaysRun = true)
     public void cleanupBasket(ITestResult result) {
         try {
-            if (cleanupRequired) {
-                boolean cleanupSucceeded = BasketTestSupport.removeProduct(
-                        apiClient, PRODUCT_SLUG, getClass().getSimpleName());
-                if (!cleanupSucceeded && result.getStatus() == ITestResult.SUCCESS) {
-                    ApiTestReporter.recordPostTestFailure(getClass().getSimpleName());
-                    result.setStatus(ITestResult.FAILURE);
-                    result.setThrowable(new AssertionError(
-                            "Basket cleanup failed for the test product."));
+            if (basketSession != null) {
+                BasketTestSupport.BasketRestoreResult restore = basketSession.restore();
+                if (!restore.success()) {
+                    BasketTestSupport.reportRestoreFailure(result, restore, reportIdentity,
+                            getClass().getSimpleName());
                 }
             }
         } finally {
             BasketTestSupport.unlock();
+            ApiTestReporter.finish(reportIdentity);
         }
     }
 
-    @Test(groups = {"api"})
+    @Test(groups = {"api", "authenticated-api", "api-mutation"})
     public void shouldExposeAddedProductAndBasketFields() {
-        ApiTestReporter.run("Basket Response Fields", () -> {
+        ApiTestReporter.run(reportIdentity, "Basket Response Fields", () -> {
+            basketSession.beforeMutation(PRODUCT_SLUG);
             Response response = apiClient.post("/addbasket", Map.of(
                     "product_slug", PRODUCT_SLUG,
                     "quantity", 1));
 
             ApiTestReporter.verifyBasketResponseContract(response, PRODUCT_SLUG, 1);
-            cleanupRequired = true;
             ApiTestReporter.verifyResponseTime(response);
         });
     }

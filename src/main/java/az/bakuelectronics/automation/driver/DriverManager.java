@@ -14,7 +14,9 @@ public final class DriverManager {
     public static void createDriver() {
         if (DRIVER.get() == null) {
             WebDriverManager.chromedriver().setup();
-            DRIVER.set(new ChromeDriver());
+            ChromeDriver driver = new ChromeDriver();
+            CampaignPopupSuppressor.installIfEnabled(driver);
+            DRIVER.set(driver);
         }
     }
 

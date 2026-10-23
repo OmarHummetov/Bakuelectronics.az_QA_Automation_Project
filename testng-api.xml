@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!-- Standard API: 10 tests. The two known-problem tests remain in testng-api-known-issues.xml. -->
+<suite name="Baku Electronics Standard API Suite (2 known issues excluded)" parallel="none">
+    <listeners>
+        <listener class-name="az.bakuelectronics.automation.support.RetryAnnotationTransformer"/>
+        <listener class-name="az.bakuelectronics.automation.support.AllureTestNgGroupLabelListener"/>
+    </listeners>
+    <test name="Public Read-only API Tests"><classes>
+        <class name="az.bakuelectronics.automation.api.DefaultSearchAvailabilityTest"/>
+        <class name="az.bakuelectronics.automation.api.DefaultSearchResultContractTest"/>
+    </classes></test>
+    <test name="Authenticated Read-only API Tests"><classes>
+        <class name="az.bakuelectronics.automation.api.BasketSnapshotReadTest"/>
+
+        <class name="az.bakuelectronics.automation.api.AuthenticationFlowTest"/>
+    </classes></test>
+    <test name="API Mutation Tests"><classes>
+        <class name="az.bakuelectronics.automation.api.BasketProductAdditionTest"/>
+        <class name="az.bakuelectronics.automation.api.BasketQuantityUpdateTest"/>
+        <class name="az.bakuelectronics.automation.api.BasketZeroQuantityRemovalTest"/>
+        <class name="az.bakuelectronics.automation.api.BasketProductRemovalTest"/>
+        <class name="az.bakuelectronics.automation.api.BasketResponseFieldsTest"/>
+        <class name="az.bakuelectronics.automation.api.BasketInvalidSlugResponseTest"/>
+    </classes></test>
+</suite>

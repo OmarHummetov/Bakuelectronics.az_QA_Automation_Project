@@ -1,6 +1,7 @@
 package az.bakuelectronics.automation.pages;
 
 import az.bakuelectronics.automation.utils.WaitUtils;
+import az.bakuelectronics.automation.utils.PriceUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -105,11 +106,7 @@ public class CategoryPage {
                 ExpectedConditions.visibilityOfAllElementsLocatedBy(CURRENT_PRODUCT_PRICES));
         List<BigDecimal> prices = new ArrayList<>();
         for (WebElement priceElement : priceElements) {
-            String numericPrice = priceElement.getText()
-                    .replace("₼", "")
-                    .replace(",", "")
-                    .trim();
-            prices.add(new BigDecimal(numericPrice));
+            prices.add(PriceUtils.parseAzn(priceElement.getText()));
         }
         return prices;
     }

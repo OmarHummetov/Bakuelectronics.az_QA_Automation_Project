@@ -17,7 +17,7 @@ public class ProductApiService {
     private final ApiClient apiClient;
 
     public ProductApiService() {
-        this(new ApiClient());
+        this(ApiClient.publicClient());
     }
 
     public ProductApiService(ApiClient apiClient) {
@@ -52,12 +52,18 @@ public class ProductApiService {
                     "Default search API returned HTTP " + response.statusCode());
         }
 
-        ProductCandidate selected = collectProductCandidates(response.jsonPath().get("$"))
-                .stream()
+        List<ProductCandidate> products = collectProductCandidates(response.jsonPath().get("$")).stream()
                 .filter(candidate -> hasCompleteIntegrationData(candidate.product()))
-                .findFirst()
+                .sorted(Comparator.comparing(candidate -> candidate.product().getSlug(),
+                        Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
+        String configuredSlug = System.getProperty("integration.product.slug");
+        ProductCandidate selected = isBlank(configuredSlug)
+                ? products.stream().findFirst().orElseThrow(() -> new IllegalStateException(
+                "Default search API response contains no product with complete integration data."))
+                : products.stream().filter(candidate -> configuredSlug.equals(candidate.product().getSlug())).findFirst()
                 .orElseThrow(() -> new IllegalStateException(
-                        "Default search API response contains no product with complete integration data."));
+                        "Configured integration product slug was not returned by the API: " + configuredSlug));
         printSelectedProductDiagnostics(selected);
         return selected.product();
     }

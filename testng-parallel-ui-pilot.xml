@@ -6,9 +6,9 @@
     </listeners>
     <test name="Safe UI Pilot">
         <classes>
-            <class name="az.bakuelectronics.automation.ui.HomeSmokeTest"/>
+            <class name="az.bakuelectronics.automation.ui.HomePageLoadTest"/>
             <class name="az.bakuelectronics.automation.ui.CategoryNavigationTest"/>
-            <class name="az.bakuelectronics.automation.ui.SearchTest"/>
+            <class name="az.bakuelectronics.automation.ui.ProductSearchResultsTest"/>
         </classes>
     </test>
 </suite>

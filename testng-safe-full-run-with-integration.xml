@@ -1,35 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<!-- Safe full run: serial by default; excludes credentialed UI login and basket mutation tests. -->
-<suite name="Baku Electronics Safe Full Suite With Integration">
+
+<suite name="Baku Electronics Safe Read-only Suite With Integration">
     <listeners>
         <listener class-name="az.bakuelectronics.automation.support.RetryAnnotationTransformer"/>
         <listener class-name="az.bakuelectronics.automation.support.AllureTestNgGroupLabelListener"/>
     </listeners>
-    <test name="Safe UI Tests">
-        <classes>
-            <class name="az.bakuelectronics.automation.ui.CategoryNavigationTest"/>
-            <class name="az.bakuelectronics.automation.ui.HomeSmokeTest"/>
-            <class name="az.bakuelectronics.automation.ui.LoginSmokeTest"/>
-            <class name="az.bakuelectronics.automation.ui.NegativeSearchTest"/>
-            <class name="az.bakuelectronics.automation.ui.PaginationTest"/>
-            <class name="az.bakuelectronics.automation.ui.ProductDetailsValidationTest"/>
-            <class name="az.bakuelectronics.automation.ui.ProductPriceFilterTest"/>
-            <class name="az.bakuelectronics.automation.ui.ProductSortingTest"/>
-            <class name="az.bakuelectronics.automation.ui.ProductTest"/>
-            <class name="az.bakuelectronics.automation.ui.SearchTest"/>
-        </classes>
-    </test>
-    <test name="Safe API Tests">
-        <classes>
-            <class name="az.bakuelectronics.automation.api.DefaultSearchResultTest"/>
-            <class name="az.bakuelectronics.automation.api.DefaultSearchResultContractTest"/>
-            <class name="az.bakuelectronics.automation.api.UnauthorizedRequestTest"/>
-        </classes>
-    </test>
-    <test name="Integration Tests">
-        <classes>
-            <class name="az.bakuelectronics.automation.integration.ProductApiUiIntegrationTest"/>
-        </classes>
-    </test>
+    <test name="Offline Unit Tests"><classes>
+        <class name="az.bakuelectronics.automation.api.ApiClientAuthenticationTest"/>
+        <class name="az.bakuelectronics.automation.unit.api.BasketSnapshotContractTest"/>
+        <class name="az.bakuelectronics.automation.unit.api.BasketStateRestorationTest"/>
+    </classes></test>
+    <test name="Public Read-only API Tests"><classes>
+        <class name="az.bakuelectronics.automation.api.DefaultSearchAvailabilityTest"/>
+        <class name="az.bakuelectronics.automation.api.DefaultSearchResultContractTest"/>
+    </classes></test>
+    <test name="Public API/UI Integration Tests"><classes>
+        <class name="az.bakuelectronics.automation.integration.ProductApiUiConsistencyTest"/>
+    </classes></test>
+    <test name="UI Read-only Tests"><classes>
+        <class name="az.bakuelectronics.automation.ui.CategoryNavigationTest"/>
+        <class name="az.bakuelectronics.automation.ui.HomePageLoadTest"/>
+        <class name="az.bakuelectronics.automation.ui.ProductSearchEmptyResultsTest"/>
+        <class name="az.bakuelectronics.automation.ui.CategoryPaginationTest"/>
+        <class name="az.bakuelectronics.automation.ui.ProductDetailsValidationTest"/>
+        <class name="az.bakuelectronics.automation.ui.ProductPriceFilterTest"/>
+        <class name="az.bakuelectronics.automation.ui.ProductPriceSortingTest"/>
+        <class name="az.bakuelectronics.automation.ui.ProductSearchNavigationTest"/>
+        <class name="az.bakuelectronics.automation.ui.ProductSearchResultsTest"/>
+        <class name="az.bakuelectronics.automation.ui.LoginFormNavigationTest"/>
+    </classes></test>
 </suite>

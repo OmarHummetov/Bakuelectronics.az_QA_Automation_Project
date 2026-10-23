@@ -1,31 +1,45 @@
-﻿# Secrets and local configuration
+﻿
 .env
 .env.*
 !.env.example
 *.secret
 *.secrets
 config/local.properties
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+id_rsa*
+id_ed25519*
 
-# Java and Maven build output
+
 target/
 *.class
 
-# IDE files
+
 .idea/
 *.iml
 .vscode/
 
-# Local tools and generated artifacts
+
 .allure/
 .firecrawl/
 allure-results/
 allure-report/
+test-output/
 *.log
 test-result.txt
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
 
-# Local backup files
+
 .gitignore.backup
 
-# Operating system files
+
 .DS_Store
 Thumbs.db

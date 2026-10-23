@@ -8,6 +8,8 @@ import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class SearchPage {
 
@@ -16,6 +18,7 @@ public class SearchPage {
     private static final String PLAYSTATION_5_SLIM_ROUTE = "/mehsul/playstation-5-slim-blue-ray-201123";
     private static final By NO_RESULTS_MESSAGE = By.xpath(
             "//*[normalize-space() = 'Nəticə tapılmadı']");
+    private static final By PRODUCT_RESULT_LINKS = By.cssSelector("a[href^='/mehsul/']");
 
     private static final By PLAYSTATION_5_SLIM_PRODUCT =
             By.cssSelector("a[href='" + PLAYSTATION_5_SLIM_ROUTE + "']");
@@ -29,6 +32,8 @@ public class SearchPage {
 
     public SearchPage waitForSearchResultsPage() {
         wait.until(ExpectedConditions.urlContains(SEARCH_RESULTS_PATH));
+        wait.until(driver -> !driver.findElements(PRODUCT_RESULT_LINKS).isEmpty()
+                || !driver.findElements(NO_RESULTS_MESSAGE).isEmpty());
         return this;
     }
 
@@ -47,6 +52,7 @@ public class SearchPage {
 
     public boolean isProductResultVisible(ProductApiModel product) {
         try {
+            waitForSearchResultsPage();
             return wait.until(ExpectedConditions.visibilityOfElementLocated(
                     productResultLocator(product.getSlug()))).isDisplayed();
         } catch (TimeoutException ignored) {
@@ -58,6 +64,23 @@ public class SearchPage {
     public void clickProductResult(ProductApiModel product) {
         wait.until(ExpectedConditions.elementToBeClickable(
                 productResultLocator(product.getSlug()))).click();
+    }
+
+    public int getProductResultCount() {
+        return wait.until(driver -> driver.findElements(PRODUCT_RESULT_LINKS).size());
+    }
+
+    public List<String> getDisplayedProductSlugs() {
+        return driverLinks().stream()
+                .map(element -> element.getAttribute("href"))
+                .filter(href -> href != null && href.contains("/mehsul/"))
+                .map(href -> href.substring(href.indexOf("/mehsul/") + "/mehsul/".length()))
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    private List<org.openqa.selenium.WebElement> driverLinks() {
+        return wait.until(driver -> driver.findElements(PRODUCT_RESULT_LINKS));
     }
 
     private static By productResultLocator(String slug) {

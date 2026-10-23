@@ -22,10 +22,10 @@ public final class ConfigReader {
         return getRequiredEnvironmentVariable(PASSWORD_VARIABLE);
     }
 
-    /**
-     * Selects the environment from -Denv first, then BAKU_ELECTRONICS_ENV.
-     * The absent value intentionally keeps the original Baku Electronics setup.
-     */
+
+
+
+
     public static String getEnvironment() {
         return firstNonBlank(System.getProperty("env"), System.getenv("BAKU_ELECTRONICS_ENV"), "default")
                 .trim().toLowerCase();
@@ -45,6 +45,10 @@ public final class ConfigReader {
 
     public static String getSsoLoginUrl() {
         return getUrl("SSO_LOGIN_URL", "sso.login.url", DEFAULT_SSO_LOGIN_URL);
+    }
+
+    public static boolean isCampaignPopupSuppressionEnabled() {
+        return Boolean.parseBoolean(System.getProperty("ui.campaignPopup.suppress", "true"));
     }
 
     private static String getUrl(String variableSuffix, String propertySuffix, String defaultValue) {

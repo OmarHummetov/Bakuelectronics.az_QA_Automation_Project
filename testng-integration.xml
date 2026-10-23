@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<suite name="Baku Electronics Integration Suite" parallel="none">
+    <listeners>
+        <listener class-name="az.bakuelectronics.automation.support.RetryAnnotationTransformer"/>
+        <listener class-name="az.bakuelectronics.automation.support.AllureTestNgGroupLabelListener"/>
+    </listeners>
+    <test name="API/UI Integration Tests"><classes>
+        <class name="az.bakuelectronics.automation.integration.ProductApiUiConsistencyTest"/>
+        <class name="az.bakuelectronics.automation.integration.BasketApiUiVisibilityTest"/>
+    </classes></test>
+</suite>

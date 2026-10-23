@@ -14,6 +14,11 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
+        <surefire.suiteXmlFiles>testng-offline.xml</surefire.suiteXmlFiles>
+
+        <test.excludedGroups>manual-auth,sensitive-auth</test.excludedGroups>
+        <test.reports.directory>${project.build.directory}/surefire-reports</test.reports.directory>
+
         <selenium.version>4.51.0</selenium.version>
         <testng.version>7.10.2</testng.version>
         <webdrivermanager.version>5.9.3</webdrivermanager.version>
@@ -77,6 +82,19 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
                 <configuration>
+
+                    <suiteXmlFiles>
+                        <suiteXmlFile>${surefire.suiteXmlFiles}</suiteXmlFile>
+                    </suiteXmlFiles>
+                    <failIfNoTests>true</failIfNoTests>
+                    <reportsDirectory>${test.reports.directory}</reportsDirectory>
+                    <excludedGroups>${test.excludedGroups}</excludedGroups>
+                    <properties>
+                        <property>
+                            <name>listener</name>
+                            <value>az.bakuelectronics.automation.support.RetryAnnotationTransformer</value>
+                        </property>
+                    </properties>
                     <systemPropertyVariables>
                         <org.slf4j.simpleLogger.log.io.github.bonigarcia.wdm>warn</org.slf4j.simpleLogger.log.io.github.bonigarcia.wdm>
                     </systemPropertyVariables>
@@ -89,4 +107,12 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>offline</id>
+            <properties>
+                <surefire.suiteXmlFiles>testng-offline.xml</surefire.suiteXmlFiles>
+            </properties>
+        </profile>
+    </profiles>
 </project>

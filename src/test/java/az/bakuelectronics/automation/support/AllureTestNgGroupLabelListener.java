@@ -7,9 +7,7 @@ import org.testng.ITestResult;
 import java.util.Set;
 import java.util.logging.Logger;
 
-/**
- * Exposes the existing TestNG smoke/regression groups as Allure tags.
- */
+
 public final class AllureTestNgGroupLabelListener implements ITestListener {
 
     private static final Set<String> ALLURE_GROUPS = Set.of("smoke", "regression");

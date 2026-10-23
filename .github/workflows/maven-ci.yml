@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   compile-and-unit-test:
-    name: Compile and Unit Test
+    name: Compile and Offline Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -29,5 +29,13 @@ jobs:
       - name: Compile project
         run: mvn --batch-mode --no-transfer-progress -DskipTests test-compile
 
-      - name: Run WaitUtilsTest
-        run: mvn --batch-mode --no-transfer-progress -Dtest=WaitUtilsTest test
+      - name: Run complete offline suite
+        run: mvn --batch-mode --no-transfer-progress -Poffline test
+
+      - name: Upload Surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/
+          if-no-files-found: warn

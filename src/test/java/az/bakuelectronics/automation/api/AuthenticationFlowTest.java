@@ -1,4 +1,5 @@
 package az.bakuelectronics.automation.api;
+import az.bakuelectronics.automation.support.api.ApiTestReporter;
 
 import az.bakuelectronics.automation.config.ConfigReader;
 import io.restassured.response.Response;
@@ -13,7 +14,7 @@ public class AuthenticationFlowTest {
     private static final String REDID_CLIENT_ID =
             "83573ba0-161a-4a65-8e07-2d65c0d066c4";
 
-    @Test(groups = "api")
+    @Test(groups = {"api", "authenticated-api"})
     public void shouldCompleteAuthenticationFlowAndInspectSsoResponse() {
         ApiTestReporter.run("Authentication Flow", () -> {
             String login = ConfigReader.getLogin();
