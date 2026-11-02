@@ -22,10 +22,6 @@ public final class ConfigReader {
         return getRequiredEnvironmentVariable(PASSWORD_VARIABLE);
     }
 
-
-
-
-
     public static String getEnvironment() {
         return firstNonBlank(System.getProperty("env"), System.getenv("BAKU_ELECTRONICS_ENV"), "default")
                 .trim().toLowerCase();
@@ -48,7 +44,7 @@ public final class ConfigReader {
     }
 
     public static boolean isCampaignPopupSuppressionEnabled() {
-        return Boolean.parseBoolean(System.getProperty("ui.campaignPopup.suppress", "true"));
+        return Boolean.parseBoolean(System.getProperty("ui.campaignPopup.suppress", "false"));
     }
 
     private static String getUrl(String variableSuffix, String propertySuffix, String defaultValue) {

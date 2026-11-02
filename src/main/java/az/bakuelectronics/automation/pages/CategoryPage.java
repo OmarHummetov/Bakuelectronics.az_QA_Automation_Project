@@ -38,8 +38,6 @@ public class CategoryPage {
     private static final By CURRENT_PRODUCT_PRICES = By.cssSelector(
             "div.Products_ProductsInnerBodyGrid__Od4SH > "
                     + "a.ProductCard_Product__3nHrM .ProductCard_OriginalPrice___qWZ1");
-    private static final By PRODUCT_TITLES = By.cssSelector(
-            "a.ProductCard_Product__3nHrM h4.ProductCard_ProductTitle___frc_");
 
     private final WaitUtils wait;
     private final WebDriver driver;
@@ -47,6 +45,161 @@ public class CategoryPage {
     public CategoryPage(WebDriver driver) {
         this.driver = driver;
         this.wait = new WaitUtils(driver, WAIT_TIMEOUT);
+    }
+
+    public CategoryPage openGuestSmartphones() {
+        driver.get(az.bakuelectronics.automation.config.ConfigReader.getUiBaseUrl()
+                + SMARTPHONES_CATEGORY_PATH);
+        az.bakuelectronics.automation.utils.CampaignPopup.dismissIfPresent(driver);
+        waitForSmartphonesCategory();
+        return this;
+    }
+
+    public ProductGrid.Snapshot snapshot() { return new ProductGrid(driver).settled(); }
+
+    /** Mobile drawer controls observed at an exact 390x844 CSS viewport. */
+    public CategoryPage openMobileGuestSmartphones() {
+        driver.get(az.bakuelectronics.automation.config.ConfigReader.getUiBaseUrl() + SMARTPHONES_CATEGORY_PATH);
+        az.bakuelectronics.automation.utils.CampaignPopup.dismissIfPresent(driver);
+        snapshot();
+        return openMobileFilters();
+    }
+
+    public CategoryPage openMobileFilters() {
+        if (!isDisplayed(By.cssSelector(".ProductsSidebar_ProductsSidebarHeaderBack__iBvfZ"))) {
+            wait.clickable(FILTERS_BUTTON).click();
+        }
+        wait.visible(By.cssSelector(".ProductsSidebar_show__HhefO .ProductsSidebar_ProductsSidebarHeaderBack__iBvfZ"));
+        return this;
+    }
+
+    public CategoryPage closeMobileFilters() {
+        wait.clickable(By.cssSelector(".ProductsSidebar_ProductsSidebarHeaderBack__iBvfZ")).click();
+        wait.gone(By.cssSelector(".ProductsSidebar_show__HhefO"));
+        return this;
+    }
+
+    public CategoryPage selectMobilePriceDescendingSort() {
+        ProductGrid.Snapshot before = snapshot();
+        wait.clickable(SORTING_BUTTON).click();
+        wait.clickable(By.xpath("//button[contains(@class,'style_DropdownBtn__')"
+                + " and normalize-space()='Bahadan ucuza']")).click();
+        wait.until(active -> "desc".equals(ProductGrid.queryParameter(active.getCurrentUrl(), "priceSort")));
+        new ProductGrid(driver).settledAfter(before);
+        return this;
+    }
+
+    public String mobileSelectedSortLabel() {
+        // Selection survives while the dropdown itself is closed/hidden.
+        return driver.findElement(By.cssSelector("button.style_DropdownBtn__DWEeg.style_Active__8VHgI"))
+                .getDomProperty("textContent").trim();
+    }
+
+    public int selectedFilterCheckboxCount() {
+        return (int) driver.findElements(By.cssSelector(".ProductsSidebar_ProductsSidebar__iOCZH input[type='checkbox']"))
+                .stream().filter(WebElement::isSelected).count();
+    }
+
+    public ProductGrid.Snapshot clearAllMobileFilters() {
+        openMobileFilters();
+        ProductGrid.Snapshot before = snapshot();
+        wait.clickable(By.cssSelector(".ProductsSidebar_show__HhefO button.ProductsSidebar_ProductsSidebarHeaderResetBtn__pK7S_"))
+                .click();
+        wait.until(active -> ProductGrid.queryParameter(active.getCurrentUrl(), "brand") == null
+                && ProductGrid.queryParameter(active.getCurrentUrl(), "prices") == null
+                && ProductGrid.queryParameter(active.getCurrentUrl(), "priceSort") == null);
+        return new ProductGrid(driver).settledAfter(before);
+    }
+
+    /** Desktop filter controls are already visible; never toggle a visible panel closed. */
+    public CategoryPage applyGuestPriceRange(int minimum, int maximum) {
+        ProductGrid.Snapshot before = snapshot();
+        if (!isDisplayed(MIN_PRICE_INPUT)) wait.clickable(FILTERS_BUTTON).click();
+        WebElement min = wait.visible(MIN_PRICE_INPUT);
+        min.sendKeys(org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.CONTROL, "a"),
+                String.valueOf(minimum));
+        WebElement max = wait.visible(MAX_PRICE_INPUT);
+        max.sendKeys(org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.CONTROL, "a"),
+                String.valueOf(maximum), org.openqa.selenium.Keys.ENTER);
+        wait.until(active -> (minimum + "," + maximum).equals(
+                ProductGrid.queryParameter(active.getCurrentUrl(), "prices")));
+        new ProductGrid(driver).settledAfter(before);
+        return this;
+    }
+
+    public CategoryPage selectPriceDescendingSort() {
+        ProductGrid.Snapshot before = snapshot();
+        // Revalidated at the extension's 1440px viewport: desktop list, not the hidden mobile dropdown.
+        wait.clickable(By.xpath("//ul[contains(@class,'style_FilterLeftDesktop__')]"
+                + "//button[normalize-space()='Bahadan ucuza']")).click();
+        wait.until(active -> "desc".equals(ProductGrid.queryParameter(active.getCurrentUrl(), "priceSort")));
+        new ProductGrid(driver).settledAfter(before);
+        return this;
+    }
+
+    public String selectedSortLabel() {
+        return wait.visible(By.cssSelector("ul.style_FilterLeftDesktop__P86Zt li.style_ActiveLink__iaVxt button"))
+                .getText().trim();
+    }
+
+    public CategoryPage removeSamsungBrand() {
+        if (!isDisplayed(samsungLabel())) wait.clickable(FILTERS_BUTTON).click();
+        if (!driver.findElement(samsungCheckbox()).isSelected()) {
+            throw new IllegalStateException("Samsung must be selected before individual removal");
+        }
+        wait.clickable(samsungLabel()).click();
+        wait.until(active -> !active.findElement(samsungCheckbox()).isSelected()
+                && ProductGrid.queryParameter(active.getCurrentUrl(), "brand") == null);
+        snapshot();
+        return this;
+    }
+
+    // The inspected label contains a separate Samsung span and a product-count span (NBSP after name).
+    private static By samsungLabel() {
+        return By.xpath("//label[.//input[@type='checkbox'] and span[normalize-space(translate(., '\u00a0', ' '))='Samsung']]");
+    }
+
+    private static By samsungCheckbox() {
+        return By.xpath("//label[span[normalize-space(translate(., '\u00a0', ' '))='Samsung']]//input[@type='checkbox']");
+    }
+
+    public CategoryPage selectSamsungBrand() {
+        ProductGrid.Snapshot before = snapshot();
+        if (!isDisplayed(samsungLabel())) wait.clickable(FILTERS_BUTTON).click();
+        if (driver.findElement(samsungCheckbox()).isSelected()) {
+            throw new IllegalStateException("Fresh category must start without Samsung selected");
+        }
+        wait.clickable(samsungLabel()).click();
+        wait.until(active -> active.findElement(samsungCheckbox()).isSelected()
+                && "samsung".equals(ProductGrid.queryParameter(active.getCurrentUrl(), "brand")));
+        new ProductGrid(driver).settledAfter(before);
+        return this;
+    }
+
+    public boolean isSamsungSelected() { return driver.findElement(samsungCheckbox()).isSelected(); }
+
+    public List<String> priceBounds() {
+        return List.of(driver.findElement(MIN_PRICE_INPUT).getDomProperty("value"),
+                driver.findElement(MAX_PRICE_INPUT).getDomProperty("value"));
+    }
+
+    public ProductGrid.Snapshot nextGuestPage() {
+        ProductGrid.Snapshot before = snapshot();
+        wait.clickable(NEXT_PAGE_BUTTON).click();
+        wait.visible(SECOND_PAGE_BUTTON);
+        wait.until(active -> "2".equals(ProductGrid.queryParameter(active.getCurrentUrl(), "page")));
+        return new ProductGrid(driver).settledAfter(before);
+    }
+
+    public boolean isSecondPageSelected() {
+        return driver.findElements(SECOND_PAGE_BUTTON).stream().anyMatch(WebElement::isDisplayed);
+    }
+
+    public String waitForCategoryDestination(String destination) {
+        wait.until(active -> java.net.URI.create(active.getCurrentUrl()).getPath()
+                .equals(java.net.URI.create(destination).getPath()));
+        new ProductGrid(driver).settled();
+        return wait.visible(CATEGORY_TITLE).getText().trim();
     }
 
     public CategoryPage waitForSmartphonesCategory() {

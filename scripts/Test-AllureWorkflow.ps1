@@ -66,7 +66,7 @@ Require ($plugin.configuration.excludedGroups -eq '${test.excludedGroups}') 'Sur
 Require ($plugin.configuration.failIfNoTests -eq 'true') 'Empty test selections must fail.'
 $catalog = @(& $workflow Validate)
 Require ((& $workflow Run UNIT -DryRun).Category -ceq 'unit') 'Category casing changed output ownership.'
-Require (($catalog.Classes | Measure-Object -Sum).Sum -eq 55) 'Expected 55 category classes including two known issues, plus one separate invalid-slug diagnostic.'
+Require (($catalog.Classes | Measure-Object -Sum).Sum -eq 61) 'Expected 61 standard category classes, plus separate opt-in UI and invalid-slug diagnostics.'
 $full = Read-Xml "$repo/testng.xml"
 $regularClasses = @()
 foreach ($category in 'unit', 'api', 'integration', 'ui') {
@@ -92,11 +92,33 @@ foreach ($category in 'unit', 'api', 'integration', 'ui') {
 }
 $scenarioClasses = @($sources.Keys | Where-Object { $_ -match 'Test$' -and $sources[$_] -match '@Test\b' })
 $diagnosticPlan = & $workflow Run api-known-issues -DryRun
-$inventory = @($regularClasses) + @($diagnosticPlan.Classes) + 'az.bakuelectronics.automation.api.InvalidProductSlugDiagnosticTest'
-Require ($scenarioClasses.Count -eq 56 -and @(Compare-Object $inventory $scenarioClasses).Count -eq 0) 'Some current scenario classes are missing or misclassified in the category inventory.'
+$extensionXml = Read-Xml "$repo/testng-ui-extension.xml"
+$extensionClasses = @($extensionXml.SelectNodes('//class') | ForEach-Object { $_.GetAttribute('name') })
+Require ($extensionClasses.Count -eq 8) 'Phase 1 must contain exactly eight explicit guest UI classes.'
+$phaseTwoXml = Read-Xml "$repo/testng-ui-extension-phase2.xml"
+$phaseTwoClasses = @($phaseTwoXml.SelectNodes('//class') | ForEach-Object { $_.GetAttribute('name') })
+Require ($phaseTwoClasses.Count -eq 4 -and !$phaseTwoXml.SelectNodes('//package').Count) 'Phase 2 must explicitly select four classes.'
+$phaseThreeXml = Read-Xml "$repo/testng-ui-extension-phase3.xml"
+$phaseThreeClasses = @($phaseThreeXml.SelectNodes('//class') | ForEach-Object { $_.GetAttribute('name') })
+Require ($phaseThreeClasses.Count -eq 4 -and !$phaseThreeXml.SelectNodes('//package').Count) 'Phase 3 must explicitly select four classes.'
+$phaseFiveXml = Read-Xml "$repo/testng-ui-extension-phase5.xml"
+$phaseFiveClasses = @($phaseFiveXml.SelectNodes('//class') | ForEach-Object { $_.GetAttribute('name') })
+Require ($phaseFiveClasses.Count -eq 2 -and !$phaseFiveXml.SelectNodes('//package').Count -and $phaseFiveXml.suite.parallel -eq 'none') 'Phase 5 must explicitly select two sequential read-only classes.'
+$authenticatedCartClasses = @('AuthenticatedCartPreflightTest', 'AuthenticatedCartPersistenceTest',
+    'AuthenticatedMultiProductCartSummaryConsistencyTest') | ForEach-Object { "az.bakuelectronics.automation.ui.$_" }
+$inventory = @($regularClasses) + @($diagnosticPlan.Classes) + $extensionClasses + $phaseTwoClasses + $phaseThreeClasses + $phaseFiveClasses + $authenticatedCartClasses + 'az.bakuelectronics.automation.api.InvalidProductSlugDiagnosticTest'
+Require ($scenarioClasses.Count -eq 83 -and @(Compare-Object $inventory $scenarioClasses).Count -eq 0) 'Some current scenario classes are missing or misclassified in the inventory.'
+Require (@($authenticatedCartClasses | Where-Object { $regularClasses -contains $_ }).Count -eq 0) 'Authenticated cart scenarios must remain exact opt-in selections.'
+Require (@($phaseFiveClasses | Where-Object { $regularClasses -contains $_ -or $extensionClasses -contains $_ -or $phaseTwoClasses -contains $_ -or $phaseThreeClasses -contains $_ }).Count -eq 0) 'Phase 5 leaked into an existing suite.'
 $uiPlan = & $workflow Run ui -DryRun
 $uiClasses = @($sources.Keys | Where-Object { $_ -like 'az.bakuelectronics.automation.ui.*' -and $sources[$_] -match '@Test\b' })
-Require (@(Compare-Object $uiPlan.Classes $uiClasses).Count -eq 0) 'UI explicit list differs from current browser scenarios.'
+Require (@(Compare-Object @($uiPlan.Classes + $extensionClasses + $phaseTwoClasses + $phaseThreeClasses + $phaseFiveClasses + $authenticatedCartClasses) $uiClasses).Count -eq 0) 'Standard UI plus extensions and opt-in cart scenarios differs from current browser scenarios.'
+Require (@($phaseThreeClasses | Where-Object { $uiPlan.Classes -contains $_ -or $extensionClasses -contains $_ -or $phaseTwoClasses -contains $_ }).Count -eq 0) 'Phase 3 leaked into previous live suites.'
+Require (@($phaseTwoClasses | Where-Object { $uiPlan.Classes -contains $_ -or $extensionClasses -contains $_ }).Count -eq 0) 'Phase 2 leaked into standard UI or Phase 1.'
+Require (@($uiPlan.Classes | Where-Object { $extensionClasses -contains $_ }).Count -eq 0) 'Extension leaked into standard UI.'
+Require (@($full.SelectNodes('/suite/test[@name="UI Tests"]/packages')).Count -eq 0) 'Full suite must not scan the UI package.'
+$fullUiClasses = @($full.SelectNodes('/suite/test[@name="UI Tests"]/classes/class') | ForEach-Object { $_.GetAttribute('name') })
+Require (($fullUiClasses -join ',') -ceq ($uiPlan.Classes -join ',')) 'Full suite standard UI selection changed.'
 $apiPlan = & $workflow Run api -DryRun
 Require ($apiPlan.Classes.Count -eq 10 -and $diagnosticPlan.Classes.Count -eq 2) 'Expected exactly 10 standard and 2 diagnostic API classes.'
 Require ($apiPlan.Scope -like 'STANDARD: 10*known issues excluded*') 'Standard report must disclose exclusions.'
@@ -110,6 +132,10 @@ foreach ($class in 'BasketPostZeroQuantityTest', 'BasketUnauthorizedRequestTest'
     $selected = & $workflow Run api-known-issues -Test $class -DryRun
     Require ($selected.Classes.Count -eq 1 -and $selected.Classes[0] -ceq $name) 'Diagnostic exact selection lost.'
 }
+$safe = Read-Xml "$repo/testng-safe-full-run-with-integration.xml"
+Require ($safe.SelectNodes('//class[@name="az.bakuelectronics.automation.api.FastSearchExpandedContractTest"]').Count -eq 1) 'Expanded search coverage missing from safe aggregate.'
+Require ($apiPlan.Classes -ccontains 'az.bakuelectronics.automation.api.DefaultSearchAvailabilityTest') 'Default-search availability coverage lost.'
+Require ($apiPlan.Classes -ccontains 'az.bakuelectronics.automation.api.FastSearchExpandedContractTest') 'Expanded search contract coverage lost.'
 foreach ($class in @($apiPlan.Classes) + @($diagnosticPlan.Classes)) {
     $annotations = [regex]::Matches($sources[$class], '@Test\s*\((.*?)\)', 'Singleline')
     Require ($annotations.Count -eq 1 -and $annotations[0].Value -match '"api"') "Expected exactly one api method in $class"
@@ -117,7 +143,7 @@ foreach ($class in @($apiPlan.Classes) + @($diagnosticPlan.Classes)) {
 }
 foreach ($selection in @(
     @{ Plan = $apiPlan; Counts = @{ api = 10; 'public-api' = 2; 'authenticated-api' = 8; 'read-only' = 3; 'api-mutation' = 6; 'negative-auth' = 0 } },
-    @{ Plan = $diagnosticPlan; Counts = @{ api = 2; 'authenticated-api' = 2; 'api-mutation' = 2; 'negative-auth' = 1; 'no-retry' = 1 } }
+    @{ Plan = $diagnosticPlan; Counts = @{ api = 2; 'public-api' = 0; 'read-only' = 0; 'authenticated-api' = 2; 'api-mutation' = 2; 'negative-auth' = 1; 'no-retry' = 1 } }
 )) {
     foreach ($group in $selection.Counts.Keys) {
         $members = @($selection.Plan.Classes | Where-Object {
@@ -161,4 +187,9 @@ if (Test-Path -LiteralPath $unitPointer) {
     }
 }
 Require (!$mavenProbe.Invoked) 'A static safety check attempted to invoke Maven.'
+foreach ($file in Get-ChildItem $PSScriptRoot -Filter '*.ps1') {
+    $parseErrors = $null; $tokens = $null
+    [System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$tokens, [ref]$parseErrors) | Out-Null
+    Require (!$parseErrors.Count) "PowerShell syntax error: $($file.Name)"
+}
 Write-Output "PASS: 10 standard + 2 diagnostic API methods, disjoint/full inventory, group filters (14 unchanged groups), $references XML references, $($snippets.Count) README PowerShell examples/selectors, default safety, scopes and rejection guards (no tests executed)."

@@ -11,6 +11,8 @@ import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.interactions.Interactive;
 
 import java.time.Duration;
 import java.math.BigDecimal;
@@ -48,14 +50,14 @@ public class CartPage {
     private static final By REMOVE_PRODUCT_BUTTON = By.xpath(
             ".//button[not(normalize-space() = '-')"
                     + " and not(normalize-space() = '+')]");
-    private static final By CART_TOTAL = By.xpath(
-            "//main//*[normalize-space() = 'Cəmi məbləğ:']/following-sibling::*[1]");
     private static final By EMPTY_CART_MESSAGE_LOCATOR = By.xpath(
             "//main//div[normalize-space() = '" + EMPTY_CART_MESSAGE + "']");
     private static final By CART_NAVIGATION = By.xpath(
             "//a[@href='/sebet' or @href='/sebet/']");
     private static final By MODAL_BACKDROP = By.cssSelector(".modal-backdrop");
     private static final By CAMPAIGN_CLOSE = By.cssSelector("button.campaignModalClose");
+    private static final By CART_HOVER_CONTROLS = By.cssSelector(
+            "[class^='header_basketHover__btn__'], [class*=' header_basketHover__btn__']");
 
     private final WaitUtils wait;
     private final WebDriver driver;
@@ -64,6 +66,286 @@ public class CartPage {
             ".modal-backdrop, .campaignModal.modal.show, main [aria-busy='true']");
 
     private final Map<String, MutationState> pendingRemovals = new HashMap<>();
+
+    private static final String INVENTORY_SCRIPT = """
+            const visible = e => !!e.getClientRects().length;
+            const result = document.evaluate(arguments[0], document, null,
+                XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+            const rows = Array.from({length: result.snapshotLength}, (_, i) => result.snapshotItem(i)).filter(visible);
+            const items = rows.map(row => {
+                const slugs = [...new Set([...row.querySelectorAll('a[href]')].map(a =>
+                    new URL(a.href).pathname.match(/^\\/mehsul\\/([a-zA-Z0-9_-]+)\\/?$/)?.[1]).filter(Boolean))];
+                if (slugs.length !== 1) throw Error('Ambiguous cart row identity');
+                const minus = [...row.querySelectorAll('button')].filter(e => visible(e) && e.innerText.trim() === '-');
+                const plus = [...row.querySelectorAll('button')].filter(e => visible(e) && e.innerText.trim() === '+');
+                if (minus.length !== 1 || plus.length !== 1) throw Error('Ambiguous cart row controls');
+                const count = minus[0].nextElementSibling;
+                if (!count) throw Error('Missing quantity');
+                return [slugs[0], count.value || count.querySelector('input')?.value || count.innerText.trim()];
+            });
+            const empty = [...document.querySelectorAll('main div')].some(e => visible(e)
+                && e.innerText.trim() === arguments[1]);
+            return [empty, items];
+            """;
+
+    /** Complete control-row inventory; empty state requires the observed empty-cart message. */
+    public Map<String, Integer> waitForInventory() {
+        Map<?, ?>[] previous = {null};
+        long[] since = {0};
+        return wait.until(active -> {
+            Map<String, Integer> current = readInventory();
+            if (current == null) { previous[0] = null; return null; }
+            if (!current.equals(previous[0])) {
+                previous[0] = current;
+                since[0] = System.nanoTime();
+                return null;
+            }
+            return System.nanoTime() - since[0] >= 1_200_000_000L ? current : null;
+        });
+    }
+
+    private Map<String, Integer> readInventory() {
+        List<?> raw = (List<?>) ((JavascriptExecutor) driver).executeScript(
+                INVENTORY_SCRIPT, CART_CONTROL_ROWS, EMPTY_CART_MESSAGE);
+        List<?> items = (List<?>) raw.get(1);
+        if (items.isEmpty()) return Boolean.TRUE.equals(raw.get(0)) ? Map.of() : null;
+        if (Boolean.TRUE.equals(raw.get(0))) return null;
+        Map<String, Integer> result = new HashMap<>();
+        for (Object value : items) {
+            List<?> row = (List<?>) value;
+            int count = Integer.parseInt((String) row.get(1));
+            if (count < 1 || result.putIfAbsent((String) row.get(0), count) != null)
+                throw new IllegalStateException("Duplicate cart identity or nonpositive quantity");
+        }
+        return Map.copyOf(result);
+    }
+
+    private static final String MULTI_SUMMARY_SCRIPT = """
+            const visible = e => !!e.getClientRects().length;
+            const all = (root, prefix) => [...root.querySelectorAll(
+                `[class^='${prefix}'], [class*=' ${prefix}']`)].filter(visible);
+            const one = (root, prefix) => {
+                const found = all(root, prefix);
+                if (found.length !== 1) throw Error(`Expected one ${prefix}, found ${found.length}`);
+                return found[0];
+            };
+            const text = e => e.innerText.trim();
+            const normalize = s => s.replace(/[\\s\\u00a0]+/g, ' ').trim();
+            const main = document.querySelector('main');
+            if (!main) return null;
+            const summary = one(main, 'sebet_BasketRight__');
+            const productRows = all(summary, 'sebet_BasketRightBodyItem__');
+            const evaluated = document.evaluate(arguments[0], document, null,
+                XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+            const controls = Array.from({length: evaluated.snapshotLength}, (_, i) => evaluated.snapshotItem(i)).filter(visible);
+            if (!controls.length || productRows.length !== controls.length) return null;
+            const fields = [];
+            const names = new Set();
+            const items = controls.map(row => {
+                const links = [...row.querySelectorAll('a[href]')];
+                const slugs = [...new Set(links.map(a => new URL(a.href).pathname
+                    .match(/^\\/mehsul\\/([a-zA-Z0-9_-]+)\\/?$/)?.[1]).filter(Boolean))];
+                const titles = [...new Set(links.filter(visible).map(a => normalize(text(a))).filter(Boolean))];
+                if (slugs.length !== 1 || titles.length !== 1) throw Error('Ambiguous control row identity/name');
+                const title = titles[0];
+                if (names.has(title)) throw Error('Summary names are not unique; cannot map identity safely');
+                names.add(title);
+                const matches = productRows.filter(r => normalize(text(one(r, 'sebet_ItemName__'))) === title);
+                if (matches.length !== 1) throw Error('Cannot map summary to exact product name');
+                const target = matches[0];
+                const name = one(target, 'sebet_ItemName__');
+                const old = one(target, 'sebet_BasketRightBodyItemPriceOld__');
+                const current = one(target, 'sebet_BasketRightBodyItemPriceCurrent__');
+                const quantity = one(target, 'sebet_ItemCount__');
+                fields.push(name, old, current, quantity);
+                const minus = [...row.querySelectorAll('button')].filter(b => visible(b) && text(b) === '-');
+                const plus = [...row.querySelectorAll('button')].filter(b => visible(b) && text(b) === '+');
+                if (minus.length !== 1 || plus.length !== 1) throw Error('Ambiguous quantity controls');
+                const count = minus[0].nextElementSibling;
+                return [slugs[0], title, text(old), text(current), text(quantity),
+                    count.value || count.querySelector('input')?.value || text(count)];
+            });
+            const discount = one(summary, 'sebet_BasketRightDiscountPrice__');
+            const total = one(summary, 'sebet_TotalTopPrice__');
+            fields.push(discount, total);
+            const copy = summary.cloneNode(true);
+            const originals = [summary, ...summary.querySelectorAll('*')];
+            const copies = [copy, ...copy.querySelectorAll('*')];
+            fields.forEach(e => copies[originals.indexOf(e)].remove());
+            originals.filter(e => !visible(e)).forEach(e => copies[originals.indexOf(e)].remove());
+            if (/\\d/.test(copy.textContent)) throw Error('Unsupported charge/amount in cart summary');
+            return [items, text(discount), text(total)];
+            """;
+
+    public CartSnapshot waitForMultiProductSummary(Map<String, String> names, Map<String, Integer> quantities) {
+        if (names.isEmpty() || !names.keySet().equals(quantities.keySet()))
+            throw new IllegalArgumentException("Expected complete identities and quantities");
+        CartSnapshot[] previous = {null};
+        String[] last = {"No complete snapshot"};
+        try {
+            return wait.until(active -> {
+                List<?> raw = (List<?>) ((JavascriptExecutor) active).executeScript(MULTI_SUMMARY_SCRIPT, CART_CONTROL_ROWS);
+                if (raw == null) { previous[0] = null; return null; }
+                CartSnapshot current;
+                try { current = CartSnapshot.parse(raw); }
+                catch (IllegalArgumentException incomplete) {
+                    last[0] = incomplete.getMessage(); previous[0] = null; return null;
+                }
+                last[0] = current.toString();
+                boolean matches = current.rows().keySet().equals(names.keySet())
+                        && current.rows().entrySet().stream().allMatch(e ->
+                        e.getValue().name().equals(CartSnapshot.normalize(names.get(e.getKey())))
+                                && Integer.valueOf(e.getValue().quantity()).equals(quantities.get(e.getKey())))
+                        && current.hasExpectedArithmetic();
+                boolean settled = matches && current.equals(previous[0]);
+                previous[0] = matches ? current : null;
+                return settled ? current : null;
+            });
+        } catch (TimeoutException failure) {
+            throw new TimeoutException("Multi-product summary did not settle: " + last[0], failure);
+        }
+    }
+
+    /** Read the complete displayed basket without assuming that the account starts empty. */
+    public CartSnapshot waitForAccountSnapshot() {
+        CartSnapshot[] previous = {null};
+        return wait.until(active -> {
+            List<?> raw = (List<?>) ((JavascriptExecutor) active).executeScript(MULTI_SUMMARY_SCRIPT, CART_CONTROL_ROWS);
+            if (raw == null) { previous[0] = null; return null; }
+            CartSnapshot current = CartSnapshot.parse(raw);
+            boolean settled = current.equals(previous[0]) && current.hasExpectedArithmetic();
+            previous[0] = current;
+            return settled ? current : null;
+        });
+    }
+
+    // Expected inputs come exclusively from the main product cards, outside BasketRight.
+    private static final String PRODUCT_INPUTS_SCRIPT = """
+            const visible = e => !!e.getClientRects().length;
+            const one = (root, prefix) => {
+                const found = [...root.querySelectorAll(`[class^='${prefix}'], [class*=' ${prefix}']`)].filter(visible);
+                if (found.length > 1) throw Error('Ambiguous main-row price');
+                return found[0];
+            };
+            const result = document.evaluate(arguments[0], document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+            const rows = Array.from({length: result.snapshotLength}, (_, i) => result.snapshotItem(i)).filter(visible);
+            if (!rows.length) return null;
+            const items = [];
+            for (const row of rows) {
+                const links = [...row.querySelectorAll('a[href]')];
+                const slugs = [...new Set(links.map(a => new URL(a.href).pathname
+                    .match(/^\\/mehsul\\/([a-zA-Z0-9_-]+)\\/?$/)?.[1]).filter(Boolean))];
+                const names = [...new Set(links.filter(visible).map(a => a.innerText.replace(/[\\s\\u00a0]+/g, ' ').trim()).filter(Boolean))];
+                if (slugs.length !== 1 || names.length !== 1) throw Error('Ambiguous main-row identity');
+                const minus = [...row.querySelectorAll('button')].filter(b => visible(b) && b.innerText.trim() === '-');
+                const plus = [...row.querySelectorAll('button')].filter(b => visible(b) && b.innerText.trim() === '+');
+                if (minus.length !== 1 || plus.length !== 1) throw Error('Ambiguous main-row controls');
+                const count = minus[0].nextElementSibling;
+                const old = one(row, 'sebet_BasketProductsItemPriceOld__');
+                const current = one(row, 'sebet_BasketProductsItemPriceCurrent__');
+                if (!count || !visible(count) || !old || !current) return null;
+                items.push([slugs[0], names[0], old.innerText.trim(), current.innerText.trim(),
+                    count.value || count.querySelector('input')?.value || count.innerText.trim()]);
+            }
+            return items;
+            """;
+
+    /** Independently scoped expected inputs; this reader never reads summary monetary fields. */
+    public Map<String, CartSnapshot.Row> waitForDisplayedProductInputs() {
+        Map<?, ?>[] previous = {null};
+        return wait.until(active -> {
+            List<?> raw = (List<?>) ((JavascriptExecutor) active).executeScript(PRODUCT_INPUTS_SCRIPT, CART_CONTROL_ROWS);
+            if (raw == null) { previous[0] = null; return null; }
+            Map<String, CartSnapshot.Row> rows = new HashMap<>();
+            java.util.Set<String> names = new java.util.HashSet<>();
+            for (Object item : raw) {
+                if (!(item instanceof List<?> fields) || fields.size() != 5
+                        || fields.stream().anyMatch(value -> !(value instanceof String)))
+                    throw new IllegalArgumentException("Incomplete main-row input");
+                String slug = (String) fields.get(0), name = CartSnapshot.normalize((String) fields.get(1));
+                String quantity = ((String) fields.get(4)).trim();
+                if (!slug.matches("[a-zA-Z0-9_-]+") || name.isBlank() || !names.add(name)
+                        || !quantity.matches("[0-9]+"))
+                    throw new IllegalArgumentException("Ambiguous main-row identity or quantity");
+                CartSnapshot.Row row = new CartSnapshot.Row(slug, name, PriceUtils.parseAzn((String) fields.get(2)),
+                        PriceUtils.parseAzn((String) fields.get(3)), Integer.parseInt(quantity));
+                if (row.quantity() < 1 || row.discountedUnitPrice().signum() <= 0
+                        || row.originalUnitPrice().compareTo(row.discountedUnitPrice()) < 0
+                        || rows.putIfAbsent(slug, row) != null)
+                    throw new IllegalArgumentException("Invalid or duplicate main-row input");
+            }
+            if (rows.isEmpty()) throw new IllegalArgumentException("Expected nonempty main-row inputs");
+            Map<String, CartSnapshot.Row> current = Map.copyOf(rows);
+            boolean settled = current.equals(previous[0]);
+            previous[0] = current;
+            return settled ? current : null;
+        });
+    }
+
+    private static final String VISIBLE_TOTALS_SCRIPT = """
+            const visible = e => !!e.getClientRects().length;
+            const all = (root, prefix) => [...root.querySelectorAll(`[class^='${prefix}'], [class*=' ${prefix}']`)].filter(visible);
+            const one = (root, prefix) => {
+                const found = all(root, prefix);
+                if (found.length > 1) throw Error('Ambiguous visible summary field');
+                return found[0];
+            };
+            const main = document.querySelector('main');
+            if (!main) return null;
+            const summary = one(main, 'sebet_BasketRight__');
+            if (!summary) return null;
+            const products = all(summary, 'sebet_BasketRightBodyItem__');
+            const discount = one(summary, 'sebet_BasketRightDiscountPrice__');
+            const total = one(summary, 'sebet_TotalTopPrice__');
+            if (!products.length || !discount || !total) return null;
+            // Do not infer charges as zero. An additional displayed amount requires a reviewed contract.
+            const clone = summary.cloneNode(true);
+            const originals = [summary, ...summary.querySelectorAll('*')];
+            const copies = [clone, ...clone.querySelectorAll('*')];
+            [...products, discount, total].forEach(e => copies[originals.indexOf(e)].remove());
+            originals.filter(e => !visible(e)).forEach(e => copies[originals.indexOf(e)].remove());
+            if (/\\d/.test(clone.textContent)) throw Error('Unsupported displayed summary charge or amount');
+            return [discount.innerText.trim(), total.innerText.trim()];
+            """;
+
+    public record DisplayedSummaryTotals(BigDecimal discount, BigDecimal total) { }
+
+    /** Raw visible RHS amounts, read separately from the main cards; no calculated acceptance predicate. */
+    public DisplayedSummaryTotals waitForDisplayedSummaryTotals() {
+        DisplayedSummaryTotals[] previous = {null};
+        return wait.until(active -> {
+            List<?> raw = (List<?>) ((JavascriptExecutor) active).executeScript(VISIBLE_TOTALS_SCRIPT);
+            if (raw == null) { previous[0] = null; return null; }
+            if (raw.size() != 2 || raw.stream().anyMatch(value -> !(value instanceof String)))
+                throw new IllegalArgumentException("Incomplete visible summary totals");
+            var current = new DisplayedSummaryTotals(PriceUtils.parseAzn((String) raw.get(0)),
+                    PriceUtils.parseAzn((String) raw.get(1)));
+            if (current.total().signum() <= 0) throw new IllegalArgumentException("Invalid nonempty summary total");
+            boolean settled = current.equals(previous[0]);
+            previous[0] = current;
+            return settled ? current : null;
+        });
+    }
+
+    /** One removal command; confirmation includes every surviving row and quantity. */
+    public void removeOwnedProduct(String slug) {
+        MutationState pending = pendingRemovals.get(slug);
+        Map<String, Integer> remaining;
+        if (pending != null) {
+            if (pending.expectedRemaining == null)
+                throw new IllegalStateException("Cannot change an unconfirmed legacy removal into an owned removal");
+            remaining = pending.expectedRemaining;
+        } else {
+            Map<String, Integer> before = waitForInventory();
+            if (!before.containsKey(slug)) throw new IllegalStateException("Owned product is absent before removal");
+            remaining = new HashMap<>(before);
+            remaining.remove(slug);
+        }
+        mutate("owned removal", slug, productRow(slug), REMOVE_PRODUCT_BUTTON, 0, Map.copyOf(remaining));
+        if (!waitForInventory().equals(remaining))
+            throw new IllegalStateException("Removal changed surviving products");
+        pendingRemovals.remove(slug);
+    }
 
 
 
@@ -261,6 +543,12 @@ public class CartPage {
         }
         cartLink.click();
         waitForCartPage();
+        // The click leaves the pointer over the header and keeps its mini-cart above the first row.
+        // Use a real pointer move, then wait for the observed hover controls to disappear.
+        if (driver instanceof Interactive) {
+            new Actions(driver).moveToLocation(1, 1).perform();
+            wait.until(ExpectedConditions.invisibilityOfElementLocated(CART_HOVER_CONTROLS));
+        }
     }
 
 
@@ -352,6 +640,7 @@ public class CartPage {
         boolean attempted, returned, staleClick;
         String readiness = "not observed";
         RuntimeException underlying;
+        Map<String, Integer> expectedRemaining;
         MutationState(String operation, String target) {
             this.operation = operation;
             this.target = target;
@@ -374,20 +663,29 @@ public class CartPage {
     }
 
     private void mutate(String operation, String slug, By rowLocator, By control, int delta) {
+        mutate(operation, slug, rowLocator, control, delta, null);
+    }
+
+    private void mutate(String operation, String slug, By rowLocator, By control, int delta,
+                        Map<String, Integer> expectedRemaining) {
         boolean removal = delta == 0;
         MutationState state = removal ? pendingRemovals.getOrDefault(slug, new MutationState(operation, slug))
                 : new MutationState(operation, slug);
+        if (!state.attempted) state.expectedRemaining = expectedRemaining;
         try {
             wait.until(active -> {
                 try {
 
                     if (state.attempted && (removal || state.before != null && state.before + delta == 0)) {
-                        state.present = !active.findElements(productLink(slug)).isEmpty();
+                        Map<String, Integer> inventory = state.expectedRemaining == null ? null : readInventory();
+                        state.present = inventory == null ? !active.findElements(productLink(slug)).isEmpty()
+                                : inventory.containsKey(slug);
 
                         state.empty = active.findElements(EMPTY_CART_MESSAGE_LOCATOR).stream()
                                 .anyMatch(WebElement::isDisplayed);
                         state.last = state.present ? null : 0;
-                        if (!state.present && state.empty) return true;
+                        if (!state.present && (state.expectedRemaining == null ? state.empty
+                                : state.expectedRemaining.equals(inventory))) return true;
                         if (!state.present) return false;
                     }
                     WebElement row = active.findElement(rowLocator);
@@ -407,7 +705,16 @@ public class CartPage {
                         }
                         return false;
                     }
-                    WebElement button = row.findElement(control);
+                    WebElement button;
+                    if (state.expectedRemaining != null) {
+                        List<WebElement> candidates = row.findElements(control).stream()
+                                .filter(WebElement::isDisplayed).toList();
+                        if (candidates.size() != 1)
+                            throw new IllegalStateException("Expected exactly one visible owned-product removal control");
+                        button = candidates.get(0);
+                    } else {
+                        button = row.findElement(control);
+                    }
                     boolean ready = button.isDisplayed() && button.isEnabled()
                             && !state.empty
                             && !"true".equals(button.getDomAttribute("aria-disabled"))
@@ -442,7 +749,8 @@ public class CartPage {
                     return false;
                 }
             });
-            if (removal) pendingRemovals.remove(slug);
+            // Owned removal remains pending until the caller also verifies a settled inventory.
+            if (removal && state.expectedRemaining == null) pendingRemovals.remove(slug);
         } catch (TimeoutException timeout) {
 
             lastMutation = state.describe();
@@ -542,6 +850,8 @@ public class CartPage {
         String route = PRODUCT_ROUTE_FRAGMENT + productSlug;
         return "@href='" + route + "' or @href='" + route + "/'"
                 + " or substring(@href, string-length(@href) - " + (route.length() - 1)
-                + ")='" + route + "'";
+                + ")='" + route + "'"
+                + " or substring(@href, string-length(@href) - " + route.length()
+                + ")='" + route + "/'";
     }
 }

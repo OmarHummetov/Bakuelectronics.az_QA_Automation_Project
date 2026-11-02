@@ -5,7 +5,6 @@ import io.restassured.response.Response;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +12,10 @@ import java.util.Map;
 public class ProductApiService {
 
     private static final String DEFAULT_SEARCH_RESULT_ENDPOINT = "/default-search-result";
+    // The site's search bar uses this endpoint. Default suggestions were observed returning {};
+    // one existing UI search fixture supplies model-bearing candidates without pinning a product.
+    private static final String EXPANDED_SEARCH_ENDPOINT = "/fast-search-expanded";
+    private static final String FALLBACK_SEARCH_QUERY = "samsung";
 
     private final ApiClient apiClient;
 
@@ -24,48 +27,41 @@ public class ProductApiService {
         this.apiClient = apiClient;
     }
 
-    public List<ProductApiModel> getDefaultSearchProducts() {
-        Response response = apiClient.get(DEFAULT_SEARCH_RESULT_ENDPOINT);
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new IllegalStateException(
-                    "Default search API returned HTTP " + response.statusCode());
-        }
-
-        Object responseBody = response.jsonPath().get("$");
-        return Collections.unmodifiableList(collectProductCandidates(responseBody).stream()
-                .map(ProductCandidate::product)
-                .toList());
-    }
-
-    public ProductApiModel getFirstDefaultSearchProduct() {
-        return getDefaultSearchProducts().stream()
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException(
-                        "Default search API response contains no products."));
-    }
-
-
     public ProductApiModel getFirstDefaultSearchProductWithCompleteData() {
-        Response response = apiClient.get(DEFAULT_SEARCH_RESULT_ENDPOINT);
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new IllegalStateException(
-                    "Default search API returned HTTP " + response.statusCode());
+        List<ProductCandidate> products = completeCandidates(apiClient.get(DEFAULT_SEARCH_RESULT_ENDPOINT),
+                DEFAULT_SEARCH_RESULT_ENDPOINT);
+        if (products.isEmpty()) {
+            products = completeCandidates(apiClient.get(EXPANDED_SEARCH_ENDPOINT,
+                    Map.of("query", FALLBACK_SEARCH_QUERY)), EXPANDED_SEARCH_ENDPOINT + "?query=" + FALLBACK_SEARCH_QUERY);
         }
-
-        List<ProductCandidate> products = collectProductCandidates(response.jsonPath().get("$")).stream()
-                .filter(candidate -> hasCompleteIntegrationData(candidate.product()))
-                .sorted(Comparator.comparing(candidate -> candidate.product().getSlug(),
-                        Comparator.nullsLast(Comparator.naturalOrder())))
-                .toList();
         String configuredSlug = System.getProperty("integration.product.slug");
         ProductCandidate selected = isBlank(configuredSlug)
                 ? products.stream().findFirst().orElseThrow(() -> new IllegalStateException(
-                "Default search API response contains no product with complete integration data."))
+                "Default and bounded expanded search contain no product with complete integration data."))
                 : products.stream().filter(candidate -> configuredSlug.equals(candidate.product().getSlug())).findFirst()
                 .orElseThrow(() -> new IllegalStateException(
                         "Configured integration product slug was not returned by the API: " + configuredSlug));
         printSelectedProductDiagnostics(selected);
         return selected.product();
+    }
+
+    private static List<ProductCandidate> completeCandidates(Response response, String source) {
+        System.out.println("Integration product discovery: " + source + ", HTTP=" + response.statusCode());
+        if (response.statusCode() < 200 || response.statusCode() >= 300) {
+            throw new IllegalStateException(
+                    "Product discovery " + source + " returned HTTP " + response.statusCode());
+        }
+        List<ProductCandidate> candidates = collectProductCandidates(response.jsonPath().get("$"));
+        List<ProductCandidate> products = candidates.stream()
+                .filter(candidate -> hasCompleteIntegrationData(candidate.product()))
+                .sorted(Comparator.comparing(candidate -> candidate.product().getSlug(),
+                        Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
+        System.out.println("Integration product discovery: candidates=" + candidates.size() + ", complete=" + products.size()
+                + ", rejectedBlankSlug=" + candidates.stream().filter(c -> isBlank(c.product().getSlug())).count()
+                + ", rejectedBlankName=" + candidates.stream().filter(c -> isBlank(c.product().getName())).count()
+                + ", rejectedMissingPrice=" + candidates.stream().filter(c -> c.product().getPrice() == null).count());
+        return products;
     }
 
     private static boolean hasCompleteIntegrationData(ProductApiModel product) {

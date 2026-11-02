@@ -18,7 +18,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -154,16 +153,6 @@ public final class BasketTestSupport {
 
     public static BasketRestoreSession begin(BasketMutationGateway gateway, String testName) {
         return new BasketRestoreSession(gateway, testName);
-    }
-
-    public static boolean containsProduct(io.restassured.response.Response response, String productSlug) {
-        try {
-            List<String> slugs = response.jsonPath().getList("products.slug");
-            return slugs != null && slugs.contains(productSlug);
-        } catch (RuntimeException exception) {
-            LOGGER.log(Level.FINE, "Could not inspect basket response.", SensitiveTestReporting.safeFailure(exception));
-            return false;
-        }
     }
 
     public static final class BasketRestoreSession {

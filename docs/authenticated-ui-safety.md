@@ -1,5 +1,9 @@
 # Authenticated UI execution
 
+30 October 2026 extension: the explicitly authorized personal-account allowlist now also includes the two
+exact authenticated Phase 4 cart methods. See [execution and recovery record](PHASE4_AUTHENTICATED_EXECUTION_2026-10-30.md).
+The earlier login-only boundary and its verification history below are retained for context; guest tests are unchanged.
+
 `AccountLoginTest` retains `regression`, `sensitive-auth`, its inherited sensitive class marker
 and `NoRetryAnalyzer`. The marker protects browser setup, test execution and cleanup.
 Shared basket cleanup, locking, API authentication and negative-login protections remain

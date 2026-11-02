@@ -1,15 +1,11 @@
 package az.bakuelectronics.automation.pages;
 
 import az.bakuelectronics.automation.utils.WaitUtils;
-import az.bakuelectronics.automation.models.ProductApiModel;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.time.Duration;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class SearchPage {
 
@@ -24,9 +20,35 @@ public class SearchPage {
             By.cssSelector("a[href='" + PLAYSTATION_5_SLIM_ROUTE + "']");
 
     private final WaitUtils wait;
+    private final WebDriver driver;
 
     public SearchPage(WebDriver driver) {
+        this.driver = driver;
         this.wait = new WaitUtils(driver, WAIT_TIMEOUT);
+    }
+
+    public ProductGrid.Snapshot waitForQuery(String query) {
+        return waitForQuery(query, null);
+    }
+
+    /** Search equivalence concerns products, not the site's spelling of the URL query. */
+    public ProductGrid.Snapshot settledSubmittedResults() {
+        wait.until(active -> java.net.URI.create(active.getCurrentUrl()).getPath().equals(SEARCH_RESULTS_PATH)
+                && ProductGrid.queryParameter(active.getCurrentUrl(), "name") != null);
+        return new ProductGrid(driver).settled();
+    }
+
+    public ProductGrid.Snapshot waitForQuery(String query, ProductGrid.Snapshot previous) {
+        wait.until(active -> java.net.URI.create(active.getCurrentUrl()).getPath().equals(SEARCH_RESULTS_PATH)
+                && query.equals(ProductGrid.queryParameter(active.getCurrentUrl(), "name")));
+        return new ProductGrid(driver).settledAfter(previous);
+    }
+
+    public ProductGrid.Snapshot restoreHistory(boolean forward, String query) {
+        ProductGrid.Snapshot previous = new ProductGrid(driver).settled();
+        if (forward) driver.navigate().forward();
+        else driver.navigate().back();
+        return waitForQuery(query, previous);
     }
 
 
@@ -47,44 +69,6 @@ public class SearchPage {
     public boolean isExpectedProductResultVisible() {
         return wait.until(ExpectedConditions.visibilityOfElementLocated(PLAYSTATION_5_SLIM_PRODUCT))
                 .isDisplayed();
-    }
-
-
-    public boolean isProductResultVisible(ProductApiModel product) {
-        try {
-            waitForSearchResultsPage();
-            return wait.until(ExpectedConditions.visibilityOfElementLocated(
-                    productResultLocator(product.getSlug()))).isDisplayed();
-        } catch (TimeoutException ignored) {
-            return false;
-        }
-    }
-
-
-    public void clickProductResult(ProductApiModel product) {
-        wait.until(ExpectedConditions.elementToBeClickable(
-                productResultLocator(product.getSlug()))).click();
-    }
-
-    public int getProductResultCount() {
-        return wait.until(driver -> driver.findElements(PRODUCT_RESULT_LINKS).size());
-    }
-
-    public List<String> getDisplayedProductSlugs() {
-        return driverLinks().stream()
-                .map(element -> element.getAttribute("href"))
-                .filter(href -> href != null && href.contains("/mehsul/"))
-                .map(href -> href.substring(href.indexOf("/mehsul/") + "/mehsul/".length()))
-                .distinct()
-                .collect(Collectors.toList());
-    }
-
-    private List<org.openqa.selenium.WebElement> driverLinks() {
-        return wait.until(driver -> driver.findElements(PRODUCT_RESULT_LINKS));
-    }
-
-    private static By productResultLocator(String slug) {
-        return By.cssSelector("a[href='/mehsul/" + slug + "']");
     }
 
 

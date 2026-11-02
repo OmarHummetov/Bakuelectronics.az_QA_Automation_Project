@@ -76,7 +76,13 @@ public final class SensitiveTestReporting {
         boolean dedicated = Boolean.getBoolean("authenticated.ui.dedicatedAccount");
         boolean personal = Boolean.getBoolean("authenticated.ui.personalAccountApproved");
         String personalMethod = type == az.bakuelectronics.automation.ui.AccountLoginTest.class
-                ? "configuredIdentifierCanBeEnteredInTheCorrectSsoMode" : "";
+                ? "configuredIdentifierCanBeEnteredInTheCorrectSsoMode"
+                : type == az.bakuelectronics.automation.ui.AuthenticatedCartPersistenceTest.class
+                ? "productPersistsAndOriginalAccountBasketIsRestored"
+                : type == az.bakuelectronics.automation.ui.AuthenticatedCartPreflightTest.class
+                ? "freshAuthenticationAndReauthenticationPreserveBasketWithoutMutation"
+                : type == az.bakuelectronics.automation.ui.AuthenticatedMultiProductCartSummaryConsistencyTest.class
+                ? "summaryMatchesIndependentProductInputsAndRestoresBasket" : "";
         boolean personalTarget = !personalMethod.isEmpty()
                 && (selection.equals(type.getSimpleName() + "#" + personalMethod)
                 || selection.equals(type.getName() + "#" + personalMethod));
@@ -86,7 +92,7 @@ public final class SensitiveTestReporting {
                 || !System.getProperty("groups", "").isBlank()) {
             throw new AssertionError("Authenticated UI execution requires one exact -Dtest=Class#method, "
                     + "-Dauthenticated.ui.approved=true and exactly one account approval mode. "
-                    + "Personal approval is restricted to the reviewed AccountLoginTest method.");
+                    + "Personal approval is restricted to reviewed exact login/cart methods.");
         }
     }
 }

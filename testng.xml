@@ -6,6 +6,8 @@
         <listener class-name="az.bakuelectronics.automation.support.AllureTestNgGroupLabelListener"/>
     </listeners>
     <test name="Offline Unit Tests"><classes>
+        <class name="az.bakuelectronics.automation.unit.AdvancedGuestCartTest"/>
+        <class name="az.bakuelectronics.automation.unit.UiExtensionContractTest"/>
         <class name="az.bakuelectronics.automation.support.RetryPolicyTest"/>
         <class name="az.bakuelectronics.automation.support.RetryAttachmentTest"/>
         <class name="az.bakuelectronics.automation.support.SensitiveReportingTest"/>
@@ -30,7 +32,7 @@
     </classes></test>
     <test name="Public Read-only API Tests"><classes>
         <class name="az.bakuelectronics.automation.api.DefaultSearchAvailabilityTest"/>
-        <class name="az.bakuelectronics.automation.api.DefaultSearchResultContractTest"/>
+        <class name="az.bakuelectronics.automation.api.FastSearchExpandedContractTest"/>
     </classes></test>
     <test name="Authenticated Read-only API Tests"><classes>
         <class name="az.bakuelectronics.automation.api.BasketSnapshotReadTest"/>
@@ -52,6 +54,28 @@
     </classes></test>
     <test name="UI Tests">
         <groups><run><exclude name="manual-auth"/><exclude name="sensitive-auth"/></run></groups>
-        <packages><package name="az.bakuelectronics.automation.ui"/></packages>
+        <!-- Explicit standard membership prevents opt-in extension discovery. -->
+        <classes>
+            <class name="az.bakuelectronics.automation.ui.AccountLoginTest"/>
+            <class name="az.bakuelectronics.automation.ui.CartContentsTest"/>
+            <class name="az.bakuelectronics.automation.ui.CartProductAdditionTest"/>
+            <class name="az.bakuelectronics.automation.ui.CartProductRemovalTest"/>
+            <class name="az.bakuelectronics.automation.ui.CartQuantityDecreaseTest"/>
+            <class name="az.bakuelectronics.automation.ui.CartQuantityIncreaseTest"/>
+            <class name="az.bakuelectronics.automation.ui.CartQuantityPriceValidationTest"/>
+            <class name="az.bakuelectronics.automation.ui.CartZeroQuantityRemovalTest"/>
+            <class name="az.bakuelectronics.automation.ui.CategoryNavigationTest"/>
+            <class name="az.bakuelectronics.automation.ui.CategoryPaginationTest"/>
+            <class name="az.bakuelectronics.automation.ui.HomePageLoadTest"/>
+            <class name="az.bakuelectronics.automation.ui.LoginFormNavigationTest"/>
+            <class name="az.bakuelectronics.automation.ui.LoginInputRejectionTest"/>
+            <class name="az.bakuelectronics.automation.ui.ProductBrandFilterTest"/>
+            <class name="az.bakuelectronics.automation.ui.ProductDetailsValidationTest"/>
+            <class name="az.bakuelectronics.automation.ui.ProductPriceFilterTest"/>
+            <class name="az.bakuelectronics.automation.ui.ProductPriceSortingTest"/>
+            <class name="az.bakuelectronics.automation.ui.ProductSearchEmptyResultsTest"/>
+            <class name="az.bakuelectronics.automation.ui.ProductSearchNavigationTest"/>
+            <class name="az.bakuelectronics.automation.ui.ProductSearchResultsTest"/>
+        </classes>
     </test>
 </suite>

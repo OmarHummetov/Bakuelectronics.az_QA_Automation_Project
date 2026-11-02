@@ -41,16 +41,6 @@ public class HomePage {
         return this;
     }
 
-    public HomePage waitForHomePage() {
-        wait.until(ExpectedConditions.urlToBe(HOME_PAGE_URL));
-        wait.until(ExpectedConditions.titleContains("Baku Electronics"));
-        return this;
-    }
-
-    public boolean isOpen() {
-        return HOME_PAGE_URL.equals(driver.getCurrentUrl());
-    }
-
     public HomePage dismissCampaignPopupIfPresent() {
         CampaignPopup.dismissIfPresent(driver);
         return this;
@@ -75,6 +65,11 @@ public class HomePage {
 
     public void submitSearch() {
         clickSearchControl(SEARCH_SUBMIT_BUTTON);
+    }
+
+    public void submitSearchWithEnter() {
+        wait.until(ExpectedConditions.elementToBeClickable(SEARCH_INPUT))
+                .sendKeys(org.openqa.selenium.Keys.ENTER);
     }
 
     private void clickSearchControl(By locator) {
@@ -113,4 +108,6 @@ public class HomePage {
     public void openSmartphonesCategory() {
         driver.get(SMARTPHONES_CATEGORY_URL);
     }
+
+    public CatalogNavigationComponent catalog() { return new CatalogNavigationComponent(driver); }
 }

@@ -13,7 +13,7 @@
     </classes></test>
     <test name="Public Read-only API Tests"><classes>
         <class name="az.bakuelectronics.automation.api.DefaultSearchAvailabilityTest"/>
-        <class name="az.bakuelectronics.automation.api.DefaultSearchResultContractTest"/>
+        <class name="az.bakuelectronics.automation.api.FastSearchExpandedContractTest"/>
     </classes></test>
     <test name="Public API/UI Integration Tests"><classes>
         <class name="az.bakuelectronics.automation.integration.ProductApiUiConsistencyTest"/>

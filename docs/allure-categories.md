@@ -1,50 +1,63 @@
 # Allure categories and execution boundaries
 
-Classification follows actual behavior, not package/directory names. Reviewed against current sources and the naming inventory. Test bodies, groups, DataProviders, listeners, retry policies, approval guards and cleanup are unchanged.
+Classification follows actual behavior, not package/directory names. Reviewed against current sources and the naming inventory. Retained business assertions, DataProviders, listeners, retry policies, approval guards and cleanup remain intact. The eight Phase 1, four Phase 2 and four Phase 3 guest extension methods reuse the existing regression/read-only groups.
 
 | Category | Scenario inventory | Standard selection before retries |
 | --- | --- | --- |
-| Unit / Offline | 21 classes, all isolated fixtures/proxies/fake gateways; no real HTTP/browser/account operations | 216 invocations, including DataProviders and class-level tests |
+| Unit / Offline | 27 classes, all isolated fixtures/proxies/fake gateways; no real HTTP/browser/account operations | 330 invocations; 331 before cleanup minus one obsolete guard check; earlier counts are historical |
 | Standard API | 10 explicit classes/methods | 10 invocations; excludes POST-zero and Unauthorized known issues; not an all-12 PASS claim |
 | API known issues | 2 explicit classes/methods | Diagnostic suite only; actual failures remain failures, unauthorized guard blocks before HTTP |
 | Integration | 2 classes/methods using both API and Selenium | 2 invocations; public comparison and authenticated basket visibility |
 | UI | 20 classes / 22 methods, real Selenium | 20 methods / 22 invocations from 19 classes; excludes valid account login and wrong-password attempt. Including both protected methods would give 24 invocations |
+| Guest UI extension (separate runner) | 8 explicit classes/methods in `testng-ui-extension.xml` | 8 read-only invocations; separate `Run-UiExtension.ps1` output under `target/allure/ui-extension/`; [scope and verified outcomes](ui-extension-phase1.md) |
+| Guest UI Phase 2 (separate runner) | 4 explicit classes/methods in `testng-ui-extension-phase2.xml` | 4 read-only invocations; `Run-UiExtensionPhase2.ps1` output under `target/allure/ui-extension-phase2/`; [scope and actual results](ui-extension-phase2.md) |
+| Guest UI Phase 3 (separate runner) | 4 explicit classes/methods in `testng-ui-extension-phase3.xml` | 4 verified read-only journeys; `Run-UiExtensionPhase3.ps1` output under `target/allure/ui-extension-phase3/`; [discovery, actual outcomes and retained accessibility failures](ui-extension-phase3.md). Optional exact `-Test` selects one class and labels its report PARTIAL. |
+| Guest UI Phase 5 | 2 read-only classes/methods in `testng-ui-extension-phase5.xml` | Historical 1 PASS / 1 FAIL; BE-UI-002 retained |
+| Authenticated cart opt-in | Preflight, persistence and independent summary: 3 classes/methods outside XML | Exact-method approval required; no live execution during cleanup |
 
-These are inventory counts, not new live PASS claims. API, integration and UI have **not** been run for this workflow change. A standard UI report is explicitly not the complete UI inventory. A standard API report covers only the ten selected standard scenarios, excluding both known issues and the optional invalid-slug diagnostic. Any `-Test` or `-ProtectedScenario` run is marked `PARTIAL` in metadata and the visible report title. A nonzero Maven exit is shown as `INCOMPLETE/FAILED RUN`; generating a report never converts failures to passes.
+These are inventory counts, not new live PASS claims. Standard API, integration and standard UI have **not** been run for Phase 1; separate guest-extension executions are documented in ui-extension-phase1.md. A standard UI report is explicitly not the complete UI inventory. A standard API report covers only the ten selected standard scenarios, excluding both known issues and the optional invalid-slug diagnostic. Any `-Test` or `-ProtectedScenario` run is marked `PARTIAL` in metadata and the visible report title. A nonzero Maven exit is shown as `INCOMPLETE/FAILED RUN`; generating a report never converts failures to passes.
 
 ## Offline class inventory
 
-| Declared class (prefix `az.bakuelectronics.automation.`) | Isolated behavior | Expected invocations |
-| --- | --- | ---: |
-| `support.RetryPolicyTest` | Retry eligibility, exclusions and limits | 16 |
-| `support.RetryAttachmentTest` | Annotation/runner attachment; nested Allure isolation | 5 |
-| `support.SensitiveReportingTest` | Nested reporting with synthetic drivers and private temporary lifecycle | 5 |
-| `support.AuthenticatedUiApprovalTest` | Exact-method/personal/dedicated approval guard | 1 |
-| `unit.PriceParsingArithmeticTest` | Parsing and exact price arithmetic | 52 |
-| `unit.CartPageQuantityTest` | Proxy DOM quantity changes | 14 |
-| `unit.CartPageVisibilityTest` | Proxy DOM visibility and stale elements | 10 |
-| `unit.CartPageNavigationTest` | Proxy routes, campaign controls and cart navigation | 14 |
-| `unit.GuestCartCleanupTest` | Synthetic guest baseline and cleanup | 11 |
-| `unit.CartPagePriceSummaryTest` | Synthetic summaries, DOM markup and arithmetic | 22 |
-| `unit.LoginRejectionVerificationTest` | Synthetic rejection evidence; no SSO request | 6 |
-| `support.LoginDiagnosticInputTest` | In-memory input/console/fallback evidence | 7 |
-| `api.ApiClientAuthenticationTest` | Injected token suppliers and request capture; no real login or HTTP | 5 |
-| `unit.api.BasketSnapshotContractTest` | In-memory response parsing | 7 |
-| `unit.api.BasketStateRestorationTest` | Fake basket gateways and local locks | 13 |
-| `unit.api.ProductIdentityMatchingTest` | Model identity matching | 4 |
-| `support.api.ApiResultReportingTest` | Fake responses and expected assertion failures | 7 |
-| `api.InvalidSlugDiagnosticSafetyTest` | Fake diagnostic gateways, opt-ins and redaction | 7 |
-| `api.InvalidProductSlugSafetyTest` | Injected fake API client, unchanged-basket/restoration checks | 6 |
-| `support.JsonArrayLoadingTest` | Local resource/error handling | 3 |
-| `support.WaitConditionResultTest` | Local condition result | 1 |
+The 27-class offline allowlist is authoritative. The obsolete Phase 4 guest-only suite and runner were removed; all dated reports remain. Use the existing unit category runner for retained offline cart contracts. See [cleanup accounting](PROJECT_CLEANUP_REPORT.md).
 
-Java source directories can differ from declared packages. The suites use the declared classes above. `OfflineRetryFixtures` and `OfflineSensitiveFixtures` are internal synthetic test harnesses, not separate report categories or suite entries. The nested retry runner's per-runner Allure ServiceLoader exclusion remains in place; sensitive reporting tests retain their separate temporary lifecycle.
+| Declared class (prefix `az.bakuelectronics.automation.`) | Expected invocations |
+| --- | ---: |
+| `api.ApiClientAuthenticationTest` | 11 |
+| `api.InvalidProductSlugSafetyTest` | 6 |
+| `api.InvalidSlugDiagnosticSafetyTest` | 7 |
+| `support.AccountCartOwnershipTest` | 5 |
+| `support.api.ApiResultReportingTest` | 7 |
+| `support.AuthenticatedLandingWaitTest` | 3 |
+| `support.AuthenticatedUiApprovalTest` | 1 |
+| `support.CartHoverNavigationTest` | 2 |
+| `support.JsonArrayLoadingTest` | 3 |
+| `support.LoginDiagnosticInputTest` | 7 |
+| `support.RetryAttachmentTest` | 5 |
+| `support.RetryPolicyTest` | 16 |
+| `support.SensitiveReportingTest` | 5 |
+| `support.WaitConditionResultTest` | 1 |
+| `unit.AdvancedGuestCartTest` | 41 |
+| `unit.api.BasketSnapshotContractTest` | 7 |
+| `unit.api.BasketStateRestorationTest` | 13 |
+| `unit.api.ProductIdentityMatchingTest` | 4 |
+| `unit.CartPageQuantityTest` | 26 |
+| `unit.CartPageNavigationTest` | 20 |
+| `unit.CartPagePriceSummaryTest` | 22 |
+| `unit.CartPageVisibilityTest` | 10 |
+| `unit.CartSummaryConsistencyContractTest` | 11 |
+| `unit.GuestCartCleanupTest` | 13 |
+| `unit.LoginRejectionVerificationTest` | 6 |
+| `unit.PriceParsingArithmeticTest` | 52 |
+| `unit.UiExtensionContractTest` | 26 |
+
+Package declarations may differ from source directories. `OfflineRetryFixtures` and `OfflineSensitiveFixtures` are required nested synthetic runners; their inner outcomes are not extra product scenarios. Retry isolation, redaction, mutation locks and cleanup checks remain unchanged.
 
 ## Live scenario inventory
 
 | Category | Current classes | Behavior / prerequisites |
 | --- | --- | --- |
-| API public GET | `DefaultSearchAvailabilityTest`, `DefaultSearchResultContractTest` | Real public HTTP reads |
+| API public GET | `DefaultSearchAvailabilityTest`, `FastSearchExpandedContractTest` | Default availability and populated expanded-search schema/relevance/price checks |
 | API authentication/access | `BasketSnapshotReadTest`, `AuthenticationFlowTest` | Authenticated basket GET and authorization/SSO POST. The legacy XML test-block name is retained, but authentication is not a read |
 | API basket mutation | `BasketProductAdditionTest`, `BasketQuantityUpdateTest`, `BasketZeroQuantityRemovalTest`, `BasketProductRemovalTest`, `BasketResponseFieldsTest` | Real POST/PUT/DELETE; exclusive account approval, locks, snapshot/restore and recovery plan |
 | API qualified contract | `BasketInvalidSlugResponseTest` | Remains standard; JSON error and unchanged-basket assertions previously passed, rejection status/schema unapproved |
@@ -57,7 +70,7 @@ Java source directories can differ from declared packages. The suites use the de
 
 ## Suites and output ownership
 
-`testng-offline.xml` remains the ordinary Maven default and `offline` profile. New `testng-api.xml`, `testng-integration.xml` and `testng-ui.xml` are opt-in category suites. Standard API retains full-suite order minus the two known issues; integration retains its corresponding full-suite block and class order. The known issues remain in the unchanged full regression XML and in testng-api-known-issues.xml, selectable through the api-known-issues category. All 14 existing group annotations remain unchanged; Maven -Dgroups=api cannot add the diagnostic classes to the standard XML allowlist. The optional invalid-slug observation retains its separate protected workflow. UI explicitly lists the current browser classes, retaining sequential execution, standard protected-group exclusions and TestNG method ordering. The original full regression, mixed read-only and parallel UI pilot XML files are unchanged; their legacy commands remain available, but the category workflow never imports their mixed results.
+`testng-offline.xml` remains the ordinary Maven default and `offline` profile. New `testng-api.xml`, `testng-integration.xml` and `testng-ui.xml` are opt-in category suites. Standard API retains full-suite order minus the two known issues; integration retains its corresponding full-suite block and class order. The known issues remain in the full regression XML and in testng-api-known-issues.xml, selectable through the api-known-issues category. All 14 existing group annotations remain unchanged; Maven -Dgroups=api cannot add the diagnostic classes to the standard XML allowlist. The optional invalid-slug observation retains its separate protected workflow. Standard UI explicitly lists its original 20 browser classes, retaining sequential execution, standard protected-group exclusions and TestNG method ordering. The full regression UI package scan was replaced by that same explicit standard list to exclude opt-in extension classes. The mixed read-only and parallel UI pilot XML files are unchanged; their legacy commands remain available, but the category workflow never imports their mixed results.
 
 ```text
 target/allure/
@@ -110,3 +123,18 @@ select its exact completed run for Generate/Open. Do not execute a combined
 selection just to check the unauthorized guard. `Run api-known-issues -DryRun`
 and `Test-AllureWorkflow.ps1` inspect selection without Maven or HTTP. Historical
 API and overall reports remain unchanged; no historical HTML was rebuilt.
+
+## Phase 5 guest UI / Mərhələ 5 qonaq UI
+
+Exactly two new explicit read-only classes are owned by `testng-ui-extension-phase5.xml` and
+`scripts/Run-UiExtensionPhase5.ps1`. Output is unique under `target/allure/ui-extension-phase5/<run-id>/`;
+no standard category pointers or historical reports are changed. Retry and Surefire rerun counts are zero.
+Actual 2026-10-29 live evidence: **1 PASS / 1 FAIL**, 0 broken/skipped/unknown; report generation succeeded.
+The failed deep-link sort-control assertion remains intact; card/detail price parity passed for two distinct products.
+[Discovery, results, exact report and commands](ui-extension-phase5.md).
+Six offline checks append to the existing class; all 12 previous XML suites are unchanged.
+
+Dəqiq iki yeni yalnız oxuma testi ayrıca Mərhələ 5 dəsti/runner-i ilə seçilir; nəticələr unikal qovluğa yazılır.
+Faktiki canlı nəticə **1 PASS / 1 FAIL**: yeni brauzerdə sıralama seçimi səhvi saxlanılır, iki məhsul üzrə
+kart/ətraflı cari qiymət uyğunluğu keçib. Əvvəlki hesabatlara və göstəricilərə yazılmır.
+Mərhələ 3 əlçatanlıq FAIL və Mərhələ 4 canlı BLOCKED dəyişməyib.

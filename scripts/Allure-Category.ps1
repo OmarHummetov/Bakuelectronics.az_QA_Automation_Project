@@ -73,7 +73,7 @@ if ($Action -eq 'Run') {
     $scope = switch ($Category) {
         unit { 'FULL offline allowlist (planned)' }
         api { 'STANDARD: 10 API tests; POST-zero and unauthorized known issues excluded; optional invalid-slug diagnostic excluded' }
-        'api-known-issues' { 'DIAGNOSTIC: 2 known issues; POST-zero contract mismatch and unauthorized guest recovery blocker; not the standard API suite' }
+        'api-known-issues' { 'DIAGNOSTIC: 2 unresolved issues; POST-zero contract mismatch and unauthorized guest recovery blocker; not the standard API suite' }
         integration { 'FULL integration suite (planned)' }
         ui { 'STANDARD: manual-auth/sensitive-auth excluded; not all UI scenarios' }
     }
@@ -125,7 +125,7 @@ if ($Action -eq 'Run') {
     if ($DryRun) { return [pscustomobject]@{ Category = $Category; Scope = $scope; Classes = $classes; Arguments = $mavenArgs } }
     if ($Category -ne 'unit') {
         Write-Warning 'LIVE: may authenticate and modify guest/account baskets. Use approved exclusive accounts; snapshot/cleanup/locks remain active. -AllowLive is not account-owner permission.'
-        if ($Category -eq 'api') { Write-Warning 'Standard API excludes POST-zero and unauthorized known issues. Invalid-slug rejection status/schema remains unresolved.' }
+        if ($Category -eq 'api') { Write-Warning 'Standard API excludes POST-zero and unauthorized diagnostics. Invalid-slug rejection status/schema remains unresolved.' }
         if ($Category -eq 'api-known-issues') { Write-Warning 'DIAGNOSTIC: POST-zero may fail its unchanged-basket assertion; unauthorized request fails closed before HTTP. No approval flag bypasses its guard.' }
     }
     New-Item -ItemType Directory -Path "$runRoot/results" -ErrorAction Stop | Out-Null

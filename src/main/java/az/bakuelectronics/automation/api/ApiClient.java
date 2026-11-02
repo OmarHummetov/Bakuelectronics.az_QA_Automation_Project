@@ -99,7 +99,6 @@ public final class ApiClient {
     }
     public Response post(String endpoint, Object body) { return execute("POST", endpoint, Map.of(), body); }
     public Response put(String endpoint, Object body) { return execute("PUT", endpoint, Map.of(), body); }
-    public Response patch(String endpoint, Object body) { return execute("PATCH", endpoint, Map.of(), body); }
     public Response delete(String endpoint, Map<String, ?> queryParameters) {
         return execute("DELETE", endpoint, queryParameters, null);
     }

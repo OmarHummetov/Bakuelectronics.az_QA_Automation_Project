@@ -1,5 +1,9 @@
 # API findings and submission reporting — 2026-10-23
 
+30 October 2026 addendum: [API uncertainty and authority review](API_CONTRACT_REVIEW.md) retains POST-zero as
+**CONTRACT_UNKNOWN** and the unauthorized diagnostic as an **EXPECTED_SAFETY_BLOCK**. It distinguishes the later
+recorded guard FAIL from an HTTP response. No live diagnostic was rerun; the selected historical evidence below is retained.
+
 Review of the standard API inventory and existing execution
 artifacts. No live tests, network requests, credentials or basket operations were used
 for this update. All dates/times are Asia/Baku. Local artifacts below are under ignored

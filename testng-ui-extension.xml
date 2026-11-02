@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!-- Opt-in guest read-only Phase 1; deliberately separate from standard UI/full regression. -->
+<suite name="Baku Electronics Guest UI Extension Phase 1" parallel="none">
+    <listeners>
+        <listener class-name="az.bakuelectronics.automation.support.RetryAnnotationTransformer"/>
+        <listener class-name="az.bakuelectronics.automation.support.AllureTestNgGroupLabelListener"/>
+    </listeners>
+    <test name="Guest read-only extension">
+        <groups><run><include name="read-only"/><exclude name="manual-auth"/><exclude name="sensitive-auth"/></run></groups>
+        <classes>
+            <class name="az.bakuelectronics.automation.ui.SearchSubmissionConsistencyTest"/>
+            <class name="az.bakuelectronics.automation.ui.SearchBrowserHistoryTest"/>
+            <class name="az.bakuelectronics.automation.ui.MultipleFiltersCombinationTest"/>
+            <class name="az.bakuelectronics.automation.ui.IndividualFilterRemovalTest"/>
+            <class name="az.bakuelectronics.automation.ui.ProductPriceDescendingSortTest"/>
+            <class name="az.bakuelectronics.automation.ui.FilterSortPaginationPersistenceTest"/>
+            <class name="az.bakuelectronics.automation.ui.ProductImageGalleryTest"/>
+            <class name="az.bakuelectronics.automation.ui.ProductBreadcrumbNavigationTest"/>
+        </classes>
+    </test>
+</suite>

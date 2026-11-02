@@ -16,7 +16,10 @@ public class AuthenticatedUiApprovalTest {
         try {
             System.setProperty("authenticated.ui.approved", "true");
             System.setProperty("authenticated.ui.personalAccountApproved", "true");
-            for (Class<?> type : new Class<?>[]{AccountLoginTest.class}) {
+            for (Class<?> type : new Class<?>[]{AccountLoginTest.class,
+                    az.bakuelectronics.automation.ui.AuthenticatedCartPersistenceTest.class,
+                    az.bakuelectronics.automation.ui.AuthenticatedCartPreflightTest.class,
+                    az.bakuelectronics.automation.ui.AuthenticatedMultiProductCartSummaryConsistencyTest.class}) {
                 String method = java.util.Arrays.stream(type.getDeclaredMethods())
                         .filter(m -> m.isAnnotationPresent(Test.class)).findFirst().orElseThrow().getName();
                 String exact = type.getSimpleName() + "#" + method;

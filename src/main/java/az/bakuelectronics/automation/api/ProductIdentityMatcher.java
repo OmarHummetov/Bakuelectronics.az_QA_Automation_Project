@@ -30,22 +30,6 @@ public final class ProductIdentityMatcher {
         return sameNormalizedName(apiProduct.getName(), uiProduct.getName());
     }
 
-    public static String matchingIdentifier(ProductApiModel product) {
-        if (product == null) {
-            return "<none>";
-        }
-        if (!isBlank(product.getSlug())) {
-            return "slug=" + product.getSlug();
-        }
-        if (!isBlank(product.getProductCode())) {
-            return "sku=" + product.getProductCode();
-        }
-        if (product.getId() != null) {
-            return "id=" + product.getId();
-        }
-        return "name=" + normalize(product.getName());
-    }
-
     private static boolean sameNonBlank(String left, String right) {
         return !isBlank(left) && !isBlank(right) && left.trim().equalsIgnoreCase(right.trim());
     }

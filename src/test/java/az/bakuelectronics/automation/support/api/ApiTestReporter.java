@@ -270,13 +270,6 @@ public final class ApiTestReporter {
         return root;
     }
 
-    public static Object verifyFieldPresent(Response response, String path) {
-        Object value = response.jsonPath().get(path);
-        check("Response field: " + path, "present and non-null", value,
-                () -> Assert.assertNotNull(value, "Response field must be present: " + path));
-        return value;
-    }
-
     public static void verifyFieldType(Response response, String path, Class<?> expectedType) {
         Object value = response.jsonPath().get(path);
         check("Field type: " + path, expectedType.getSimpleName(), typeName(value),
@@ -290,13 +283,6 @@ public final class ApiTestReporter {
         check("Field value: " + path, "non-blank string", displayedValue,
                 () -> Assert.assertTrue(value instanceof String && !((String) value).isBlank(),
                         "Expected " + path + " to be a non-blank string"));
-    }
-
-    public static void verifyListContains(Response response, String path, Object expectedValue) {
-        Object value = response.jsonPath().get(path);
-        check("Array field: " + path, "contains " + safeValue(expectedValue), value,
-                () -> Assert.assertTrue(value instanceof List<?> list && list.contains(expectedValue),
-                        "Expected " + path + " to contain " + expectedValue));
     }
 
     public static void verifyValuePresent(String label, Object value) {

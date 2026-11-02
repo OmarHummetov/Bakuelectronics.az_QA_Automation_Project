@@ -1,7 +1,6 @@
 package az.bakuelectronics.automation.support.api;
 
 import java.util.Map;
-import java.util.Objects;
 
 
 public record BasketItemKey(Long productId, String slug, String sku, Long variantId) {

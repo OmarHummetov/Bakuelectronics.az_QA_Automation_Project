@@ -15,8 +15,8 @@ Historical evidence retains the names used when recorded. Consult this inventory
 | AuthenticationFlowTest.java | = (unchanged) | Clear authorization-code exchange and SSO token checks. |
 | BasketGetBasketReadOnlyTest.java | BasketSnapshotReadTest.java | Checks GET response shape and snapshot parsing; remove duplicated Basket. |
 | BasketResponseFieldsTest.java | = (unchanged) | Clear product and basket response-field checks after addition. |
-| DefaultSearchResultTest.java | DefaultSearchAvailabilityTest.java | Checks availability and product-object presence, distinct from the detailed contract. |
-| DefaultSearchResultContractTest.java | = (unchanged) | Clear detailed default-search product JSON contract. |
+| DefaultSearchResultTest.java | DefaultSearchAvailabilityTest.java | Checks default-endpoint HTTP availability and JSON object format; does not guarantee populated suggestions. |
+| DefaultSearchResultContractTest.java | FastSearchExpandedContractTest.java | Replaces unsupported default population assumption with verified expanded-search data/schema, every product's identity/relevance and selling-price checks. |
 | DeleteBasketTest.java | BasketProductRemovalTest.java | Deletes one product and asserts absence; does not delete the basket. |
 | InvalidProductSlugDiagnosticTest.java | = (unchanged) | Clear opt-in invalid-slug observation diagnostic without promising rejection. |
 | InvalidProductSlugTest.java | BasketInvalidSlugResponseTest.java | Checks error fields and unchanged basket; avoids implying an approved status contract. |

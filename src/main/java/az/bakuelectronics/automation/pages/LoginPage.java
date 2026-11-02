@@ -10,6 +10,7 @@ import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.time.Duration;
+import java.util.function.Consumer;
 
 
 public class LoginPage {
@@ -27,7 +28,9 @@ public class LoginPage {
     private static final By LOGIN_BUTTON = By.xpath("//button[normalize-space()='Daxil ol']");
     private static final By AUTHENTICATED_ACTION = By.xpath(
             "//*[normalize-space()='Çıxış'] | //a[@href='/istifadeci/sifarisler']");
-    private static final String HOME_PAGE_URL = ConfigReader.getUiBaseUrl() + "/";
+    private static final By AUTHENTICATED_PROFILE = By.cssSelector("button.header_UserIcon__gOK4_");
+    private static final By ACCOUNT_SSO_LINK = By.cssSelector("a[href^='https://sso.redid.az/auth/']");
+    private static final String SITE_URL_PREFIX = ConfigReader.getUiBaseUrl() + "/";
     private static final Duration POST_LOGIN_WAIT_TIMEOUT = Duration.ofSeconds(25);
 
     private final WebDriver driver;
@@ -70,6 +73,17 @@ public class LoginPage {
     }
 
     public LoginPage loginWithConfiguredCredentials() {
+        return loginWithConfiguredCredentials(POST_LOGIN_WAIT_TIMEOUT);
+    }
+
+    /** A visible browser can be used to complete MFA during this bounded wait. */
+    public LoginPage loginWithConfiguredCredentials(Duration postLoginTimeout) {
+        return loginWithConfiguredCredentials(postLoginTimeout, ignored -> { });
+    }
+
+    /** Diagnostics contain fixed checkpoint names and booleans only, never authentication values. */
+    public LoginPage loginWithConfiguredCredentials(Duration postLoginTimeout, Consumer<String> checkpoint) {
+        checkpoint.accept("select identifier mode and enter configured identifier");
         String login = ConfigReader.getLogin();
         if (looksLikeEmail(login)) {
             selectEmailLogin().enterEmail(login);
@@ -77,16 +91,35 @@ public class LoginPage {
             selectMobileNumberLogin().enterMobileNumber(login);
         }
 
+        checkpoint.accept("submit identifier once");
         submitLogin();
+        checkpoint.accept("wait for password input");
         wait.until(ExpectedConditions.visibilityOfElementLocated(PASSWORD_INPUT));
+        checkpoint.accept("enter configured password");
         enterPassword(ConfigReader.getPassword());
+        checkpoint.accept("submit password once");
         submitPassword();
-
-        new WaitUtils(driver, POST_LOGIN_WAIT_TIMEOUT).until(
-                ExpectedConditions.and(
-                        ExpectedConditions.urlToBe(HOME_PAGE_URL),
-                        ExpectedConditions.titleContains("Baku Electronics")));
+        checkpoint.accept("wait for authenticated profile on configured site");
+        waitForAuthenticatedLanding(postLoginTimeout, checkpoint);
         return this;
+    }
+
+    public void waitForAuthenticatedLanding(Duration timeout, Consumer<String> checkpoint) {
+        String[] previous = {null};
+        new WaitUtils(driver, timeout).until(active -> {
+            boolean siteMatches = active.getCurrentUrl().startsWith(SITE_URL_PREFIX);
+            boolean profileVisible = siteMatches && active.findElements(AUTHENTICATED_PROFILE).stream()
+                    .anyMatch(element -> element.isDisplayed() && element.isEnabled());
+            boolean ssoLinkVisible = siteMatches && active.findElements(ACCOUNT_SSO_LINK).stream()
+                    .anyMatch(WebElement::isDisplayed);
+            String state = "landing: configuredSite=" + siteMatches + ", authenticatedProfile=" + profileVisible
+                    + ", anonymousAccountLink=" + ssoLinkVisible;
+            if (!state.equals(previous[0])) {
+                checkpoint.accept(state);
+                previous[0] = state;
+            }
+            return siteMatches && profileVisible && !ssoLinkVisible;
+        });
     }
 
     public void submitLogin() {

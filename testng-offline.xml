@@ -7,6 +7,12 @@
         <listener class-name="az.bakuelectronics.automation.support.AllureTestNgGroupLabelListener"/>
     </listeners>
     <test name="Offline Unit Tests"><classes>
+        <class name="az.bakuelectronics.automation.support.AccountCartOwnershipTest"/>
+        <class name="az.bakuelectronics.automation.support.CartHoverNavigationTest"/>
+        <class name="az.bakuelectronics.automation.support.AuthenticatedLandingWaitTest"/>
+        <class name="az.bakuelectronics.automation.unit.CartSummaryConsistencyContractTest"/>
+        <class name="az.bakuelectronics.automation.unit.AdvancedGuestCartTest"/>
+        <class name="az.bakuelectronics.automation.unit.UiExtensionContractTest"/>
         <class name="az.bakuelectronics.automation.support.RetryPolicyTest"/>
         <class name="az.bakuelectronics.automation.support.RetryAttachmentTest"/>
         <class name="az.bakuelectronics.automation.support.SensitiveReportingTest"/>
