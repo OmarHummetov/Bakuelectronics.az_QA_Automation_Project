@@ -62,9 +62,22 @@ public class AccountCartOwnershipTest {
             String content = java.nio.file.Files.readString(path);
             Assert.assertTrue(content.contains("baseline.synthetic-existing=3"));
             Assert.assertTrue(content.contains("owned.synthetic-a=2"));
-            var acl = java.nio.file.Files.getFileAttributeView(path,
-                    java.nio.file.attribute.AclFileAttributeView.class).getAcl();
-            Assert.assertEquals(acl.size(), 1);
+            if (java.nio.file.Files.getFileStore(path).supportsFileAttributeView(
+                    java.nio.file.attribute.PosixFileAttributeView.class)) {
+                Assert.assertEquals(java.nio.file.Files.getPosixFilePermissions(path), java.util.EnumSet.of(
+                        java.nio.file.attribute.PosixFilePermission.OWNER_READ,
+                        java.nio.file.attribute.PosixFilePermission.OWNER_WRITE));
+            } else {
+                var acl = java.nio.file.Files.getFileAttributeView(path,
+                        java.nio.file.attribute.AclFileAttributeView.class).getAcl();
+                Assert.assertEquals(acl.size(), 1);
+                Assert.assertEquals(acl.getFirst().type(), java.nio.file.attribute.AclEntryType.ALLOW);
+                var user = path.getFileSystem().getUserPrincipalLookupService().lookupPrincipalByName(
+                        System.getenv("USERDOMAIN") + "\\" + System.getProperty("user.name"));
+                Assert.assertEquals(acl.getFirst().principal(), user);
+                Assert.assertEquals(acl.getFirst().permissions(), java.util.EnumSet.allOf(
+                        java.nio.file.attribute.AclEntryPermission.class));
+            }
             Assert.expectThrows(IllegalStateException.class, () -> new PrivateCartJournal(path));
             journal.complete();
             Assert.assertFalse(java.nio.file.Files.exists(path));

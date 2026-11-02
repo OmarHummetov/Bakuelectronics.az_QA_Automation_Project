@@ -12,6 +12,9 @@ import java.nio.file.attribute.AclEntryPermission;
 import java.nio.file.attribute.AclEntryType;
 import java.nio.file.attribute.AclFileAttributeView;
 import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -23,6 +26,16 @@ public final class PrivateCartJournal {
         this.path = path;
         if (Files.exists(path))
             throw new IllegalStateException("A previous ownership journal exists. Review recovery before any new mutations.");
+        var store = Files.getFileStore(path.toAbsolutePath().getParent());
+        if (store.supportsFileAttributeView(PosixFileAttributeView.class)) {
+            var permissions = EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
+            Files.createFile(path, PosixFilePermissions.asFileAttribute(permissions));
+            if (!Files.getPosixFilePermissions(path).equals(permissions))
+                throw new IOException("Private journal POSIX permissions could not be verified");
+            return;
+        }
+        if (!store.supportsFileAttributeView(AclFileAttributeView.class))
+            throw new IOException("File system cannot guarantee private journal permissions");
         // Qualify the Windows principal: an unqualified machine/user name can resolve to the domain SID.
         String principal = System.getenv("USERDOMAIN") + "\\" + System.getProperty("user.name");
         var user = path.getFileSystem().getUserPrincipalLookupService().lookupPrincipalByName(principal);
