@@ -47,7 +47,10 @@ foreach ($match in [regex]::Matches($readme, '-Dtest=([A-Za-z_][\w.,#]*)')) {
     }
 }
 $references = 0
-foreach ($file in Get-ChildItem $repo -Filter 'testng*.xml') {
+$suiteFiles = @(Get-ChildItem "$repo/suites" -Recurse -File -Filter '*.xml')
+Require ($suiteFiles.Count -eq 12) 'Expected exactly twelve suites under suites/.'
+Require (@(Get-ChildItem $repo -File -Filter 'testng*.xml').Count -eq 0) 'Suite XML files must not remain in the repository root.'
+foreach ($file in $suiteFiles) {
     $xml = Read-Xml $file.FullName
     $classes = @($xml.SelectNodes('//class') | ForEach-Object { $_.GetAttribute('name') })
     Require (@($classes | Sort-Object -Unique).Count -eq $classes.Count) "Duplicate class in $($file.Name)"
@@ -57,7 +60,9 @@ foreach ($file in Get-ChildItem $repo -Filter 'testng*.xml') {
     }
 }
 $pom = Read-Xml "$repo/pom.xml"
-Require ($pom.project.properties.'surefire.suiteXmlFiles' -eq 'testng-offline.xml') 'Default suite must stay offline.'
+Require ($pom.project.properties.'surefire.suiteXmlFiles' -eq 'suites/offline.xml') 'Default suite must stay offline.'
+$offlineProfile = @($pom.project.profiles.profile | Where-Object id -eq 'offline')
+Require ($offlineProfile.Count -eq 1 -and $offlineProfile[0].properties.'surefire.suiteXmlFiles' -eq 'suites/offline.xml') 'Offline profile must select the offline suite.'
 Require ($pom.project.properties.'test.excludedGroups' -eq 'manual-auth,sensitive-auth') 'Protected exclusions changed.'
 $plugin = @($pom.project.build.plugins.plugin | Where-Object artifactId -eq 'maven-surefire-plugin')[0]
 Require ($plugin.configuration.reportsDirectory -eq '${test.reports.directory}') 'Surefire output override must be bound in POM.'
@@ -67,7 +72,7 @@ Require ($plugin.configuration.failIfNoTests -eq 'true') 'Empty test selections 
 $catalog = @(& $workflow Validate)
 Require ((& $workflow Run UNIT -DryRun).Category -ceq 'unit') 'Category casing changed output ownership.'
 Require (($catalog.Classes | Measure-Object -Sum).Sum -eq 61) 'Expected 61 standard category classes, plus separate opt-in UI and invalid-slug diagnostics.'
-$full = Read-Xml "$repo/testng.xml"
+$full = Read-Xml "$repo/suites/legacy-full.xml"
 $regularClasses = @()
 foreach ($category in 'unit', 'api', 'integration', 'ui') {
     $plan = & $workflow Run $category -DryRun
@@ -92,16 +97,16 @@ foreach ($category in 'unit', 'api', 'integration', 'ui') {
 }
 $scenarioClasses = @($sources.Keys | Where-Object { $_ -match 'Test$' -and $sources[$_] -match '@Test\b' })
 $diagnosticPlan = & $workflow Run api-known-issues -DryRun
-$extensionXml = Read-Xml "$repo/testng-ui-extension.xml"
+$extensionXml = Read-Xml "$repo/suites/ui-extensions/catalog-exploration.xml"
 $extensionClasses = @($extensionXml.SelectNodes('//class') | ForEach-Object { $_.GetAttribute('name') })
 Require ($extensionClasses.Count -eq 8) 'Phase 1 must contain exactly eight explicit guest UI classes.'
-$phaseTwoXml = Read-Xml "$repo/testng-ui-extension-phase2.xml"
+$phaseTwoXml = Read-Xml "$repo/suites/ui-extensions/product-behavior.xml"
 $phaseTwoClasses = @($phaseTwoXml.SelectNodes('//class') | ForEach-Object { $_.GetAttribute('name') })
 Require ($phaseTwoClasses.Count -eq 4 -and !$phaseTwoXml.SelectNodes('//package').Count) 'Phase 2 must explicitly select four classes.'
-$phaseThreeXml = Read-Xml "$repo/testng-ui-extension-phase3.xml"
+$phaseThreeXml = Read-Xml "$repo/suites/ui-extensions/navigation-accessibility.xml"
 $phaseThreeClasses = @($phaseThreeXml.SelectNodes('//class') | ForEach-Object { $_.GetAttribute('name') })
 Require ($phaseThreeClasses.Count -eq 4 -and !$phaseThreeXml.SelectNodes('//package').Count) 'Phase 3 must explicitly select four classes.'
-$phaseFiveXml = Read-Xml "$repo/testng-ui-extension-phase5.xml"
+$phaseFiveXml = Read-Xml "$repo/suites/ui-extensions/deep-link-pricing.xml"
 $phaseFiveClasses = @($phaseFiveXml.SelectNodes('//class') | ForEach-Object { $_.GetAttribute('name') })
 Require ($phaseFiveClasses.Count -eq 2 -and !$phaseFiveXml.SelectNodes('//package').Count -and $phaseFiveXml.suite.parallel -eq 'none') 'Phase 5 must explicitly select two sequential read-only classes.'
 $authenticatedCartClasses = @('AuthenticatedCartPreflightTest', 'AuthenticatedCartPersistenceTest',
@@ -123,7 +128,7 @@ $apiPlan = & $workflow Run api -DryRun
 Require ($apiPlan.Classes.Count -eq 10 -and $diagnosticPlan.Classes.Count -eq 2) 'Expected exactly 10 standard and 2 diagnostic API classes.'
 Require ($apiPlan.Scope -like 'STANDARD: 10*known issues excluded*') 'Standard report must disclose exclusions.'
 Require ($diagnosticPlan.Scope -like 'DIAGNOSTIC: 2*') 'Diagnostic report scope missing.'
-Require ($diagnosticPlan.Arguments -contains '-Dsurefire.suiteXmlFiles=testng-api-known-issues.xml') 'Diagnostic suite override missing.'
+Require ($diagnosticPlan.Arguments -contains '-Dsurefire.suiteXmlFiles=suites/diagnostics/api-known-issues.xml') 'Diagnostic suite override missing.'
 Require (($diagnosticPlan.Arguments -join ' ') -match 'target[/\\]allure[/\\]api-known-issues[/\\]') 'Diagnostic results are not isolated.'
 foreach ($class in 'BasketPostZeroQuantityTest', 'BasketUnauthorizedRequestTest') {
     $name = "az.bakuelectronics.automation.api.$class"
@@ -132,7 +137,7 @@ foreach ($class in 'BasketPostZeroQuantityTest', 'BasketUnauthorizedRequestTest'
     $selected = & $workflow Run api-known-issues -Test $class -DryRun
     Require ($selected.Classes.Count -eq 1 -and $selected.Classes[0] -ceq $name) 'Diagnostic exact selection lost.'
 }
-$safe = Read-Xml "$repo/testng-safe-full-run-with-integration.xml"
+$safe = Read-Xml "$repo/suites/safe-regression.xml"
 Require ($safe.SelectNodes('//class[@name="az.bakuelectronics.automation.api.FastSearchExpandedContractTest"]').Count -eq 1) 'Expanded search coverage missing from safe aggregate.'
 Require ($apiPlan.Classes -ccontains 'az.bakuelectronics.automation.api.DefaultSearchAvailabilityTest') 'Default-search availability coverage lost.'
 Require ($apiPlan.Classes -ccontains 'az.bakuelectronics.automation.api.FastSearchExpandedContractTest') 'Expanded search contract coverage lost.'

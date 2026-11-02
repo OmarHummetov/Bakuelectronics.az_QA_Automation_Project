@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 
-<!-- Standard API: 10 tests. Two unresolved diagnostics remain in testng-api-known-issues.xml. -->
+<!-- Standard API: 10 tests. Two unresolved diagnostics remain in suites/diagnostics/api-known-issues.xml. -->
 <suite name="Baku Electronics Standard API Suite (2 diagnostics excluded)" parallel="none">
     <listeners>
         <listener class-name="az.bakuelectronics.automation.support.RetryAnnotationTransformer"/>

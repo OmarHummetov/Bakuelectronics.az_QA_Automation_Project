@@ -89,7 +89,7 @@ was introduced into the default contract test.
 | Maven Java 23 test compilation, all 108 test/support sources | PASS, exit 0 |
 | Existing public API selection: `DefaultSearchAvailabilityTest`, `DefaultSearchResultContractTest` | **1 PASS / 1 FAIL / 0 SKIP**, TestNG exit 1; live retries disabled |
 | Existing public `ProductApiUiConsistencyTest` | **1 PASS / 0 FAIL / 0 SKIP**, TestNG exit 0; live retries disabled |
-| Full existing `testng-offline.xml`, `mvn --offline -Poffline test` | **330 PASS / 0 FAIL / 0 ERROR / 0 SKIP**, Maven exit 0 |
+| Full existing `suites/offline.xml`, `mvn --offline -Poffline test` | **330 PASS / 0 FAIL / 0 ERROR / 0 SKIP**, Maven exit 0 |
 | Offline full-method + ordered-parameter identity/multiplicity comparison against latest serial baseline | **330 -> 330**, zero missing, added or non-passed identities |
 | Final guest search-network diagnostic and expanded-response structure diagnostic | PASS; these are observations, not additional TestNG tests |
 

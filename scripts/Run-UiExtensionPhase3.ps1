@@ -14,7 +14,7 @@ $expected = @('InstallmentOptionsConsistencyTest', 'RelatedProductsNavigationTes
 $settings = New-Object System.Xml.XmlReaderSettings
 $settings.DtdProcessing = [System.Xml.DtdProcessing]::Ignore
 $settings.XmlResolver = $null
-$reader = [System.Xml.XmlReader]::Create((Join-Path $repo 'testng-ui-extension-phase3.xml'), $settings)
+$reader = [System.Xml.XmlReader]::Create((Join-Path $repo 'suites/ui-extensions/navigation-accessibility.xml'), $settings)
 try { $suite = New-Object System.Xml.XmlDocument; $suite.Load($reader) } finally { $reader.Dispose() }
 $selected = @($suite.SelectNodes('//class') | ForEach-Object { $_.GetAttribute('name') })
 if ($selected.Count -ne 4 -or @(Compare-Object $selected $expected).Count -ne 0 -or $suite.SelectNodes('//package').Count) {
@@ -30,7 +30,7 @@ $runId = (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString
 $runRoot = Join-Path $repo "target/allure/ui-extension-phase3/$runId"
 New-Item -ItemType Directory -Path "$runRoot/results" | Out-Null
 $arguments = @('--batch-mode', '--no-transfer-progress', '-Daether.syncContext.named.factory=rwlock-local',
-    '-Dsurefire.suiteXmlFiles=testng-ui-extension-phase3.xml', '-Dtest.retry.max=0', '-Dsurefire.rerunFailingTestsCount=0',
+    '-Dsurefire.suiteXmlFiles=suites/ui-extensions/navigation-accessibility.xml', '-Dtest.retry.max=0', '-Dsurefire.rerunFailingTestsCount=0',
     '-Dui.campaignPopup.suppress=false',
     "-Dallure.results.directory=$runRoot/results", "-Dtest.reports.directory=$runRoot/surefire", 'test')
 if ($CachedDependencies) { $arguments = @('--offline') + $arguments }
@@ -53,7 +53,7 @@ try {
     if ($Test) { $title = "PARTIAL - $Test - Maven exit $mavenExit - GUEST UI PHASE 3" }
     & $AllureCli generate "$runRoot/results" -o "$runRoot/report" --name $title
     $allureExit = $LASTEXITCODE
-    [ordered]@{ runId = $runId; suite = 'testng-ui-extension-phase3.xml'; classes = $expected; selection = $Test;
+    [ordered]@{ runId = $runId; suite = 'suites/ui-extensions/navigation-accessibility.xml'; classes = $expected; selection = $Test;
         started = $started; completed = (Get-Date).ToString('o'); mavenExitCode = $mavenExit;
         allureExitCode = $allureExit; resultCount = $results.Count;
         statuses = @($results | Group-Object status | Select-Object Name, Count);

@@ -3,7 +3,7 @@
 ## English
 
 Exactly four new UI classes, four test methods and four invocations are selected explicitly by
-`testng-ui-extension-phase2.xml`. Each uses `regression`, `read-only`, `NoRetryAnalyzer` and Allure feature/story metadata.
+`suites/ui-extensions/product-behavior.xml`. Each uses `regression`, `read-only`, `NoRetryAnalyzer` and Allure feature/story metadata.
 Every method starts a fresh guest Chrome session through the existing `DriverManager` lifecycle.
 There is no login, credential access, basket mutation, purchase click, notification/lead submission or review posting.
 
@@ -57,7 +57,7 @@ JavaScript reads dimensions and scrolls controls into view; native Selenium clic
 
 ### Suite isolation and offline coverage
 
-`testng.xml`, `testng-ui.xml` and `testng-ui-extension.xml` remain byte-for-byte unchanged.
+`suites/legacy-full.xml`, `suites/ui.xml` and `suites/ui-extensions/catalog-exploration.xml` remain byte-for-byte unchanged.
 The standard selection remains 22 invocations; Phase 1 remains eight methods with its recorded final 8/8 PASS and both debugging runs preserved.
 Neither standard UI/full regression nor Phase 1 can discover Phase 2 through package scanning.
 Both protected authentication exclusions remain in the new suite and all original suites.
@@ -99,7 +99,7 @@ The runner validates exactly four approved classes, disables both retry mechanis
 
 ## Azərbaycanca
 
-Yeni `testng-ui-extension-phase2.xml` dəsti dəqiq **4 yeni UI sinfi / 4 metod / 4 çağırış** seçir.
+Yeni `suites/ui-extensions/product-behavior.xml` dəsti dəqiq **4 yeni UI sinfi / 4 metod / 4 çağırış** seçir.
 Metodlar `regression`, `read-only`, `NoRetryAnalyzer` və Allure feature/story metadata-sından istifadə edir.
 Hər metod yeni qonaq Chrome sessiyasında işləyir; giriş, məxfi məlumat oxuma, səbət dəyişikliyi,
 alış düyməsinə klik, bildiriş/sifariş/sorğu və rəy göndərilməsi yoxdur.
@@ -177,7 +177,7 @@ Created / Yaradılıb:
 - `src/test/java/az/bakuelectronics/automation/ui/OutOfStockPurchaseRestrictionTest.java`
 - `src/test/java/az/bakuelectronics/automation/ui/ProductReviewSectionTest.java`
 - `src/main/java/az/bakuelectronics/automation/pages/ProductReviewsComponent.java`
-- `testng-ui-extension-phase2.xml`
+- `suites/ui-extensions/product-behavior.xml`
 - `scripts/Run-UiExtensionPhase2.ps1`
 - `docs/ui-extension-phase2.md`
 
@@ -196,8 +196,8 @@ Original suite SHA-256 values remain identical before/after:
 
 | File | SHA-256 |
 | --- | --- |
-| `testng-ui.xml` | `371D3929F8A83F34C48D7657C7D2C9BA65BFCD09A5B2510A64617B9149AD299B` |
-| `testng-ui-extension.xml` | `45CC37F44FB9F1EE764938568D051BACDE4D546940AB4BD0C5AD36D2B9D8A8FD` |
-| `testng.xml` | `F332BAD1D1AD006772BB0D794FA46E94BD13AA2DC49F2311461A4960CFDE51B6` |
+| `suites/ui.xml` | `371D3929F8A83F34C48D7657C7D2C9BA65BFCD09A5B2510A64617B9149AD299B` |
+| `suites/ui-extensions/catalog-exploration.xml` | `45CC37F44FB9F1EE764938568D051BACDE4D546940AB4BD0C5AD36D2B9D8A8FD` |
+| `suites/legacy-full.xml` | `F332BAD1D1AD006772BB0D794FA46E94BD13AA2DC49F2311461A4960CFDE51B6` |
 
 No Git staging, commit or push. Earlier reports were neither cleaned nor regenerated.

@@ -67,13 +67,13 @@ Constructing an `ApiClient` does not immediately authenticate. The first authent
 ```text
 Bakuelectronics.az_QA_Automation_Project/
 ├── pom.xml
-├── testng-offline.xml
-├── testng-ui.xml / testng-api.xml / testng-integration.xml
-├── testng-api-known-issues.xml
-├── testng.xml
-├── testng-safe-full-run-with-integration.xml
-├── testng-parallel-ui-pilot.xml
-├── testng-ui-extension*.xml
+├── suites/
+│   ├── offline.xml
+│   ├── ui.xml / api.xml / integration.xml
+│   ├── safe-regression.xml / legacy-full.xml
+│   ├── ui-extensions/          Catalog, product, navigation and pricing selections
+│   ├── diagnostics/            API known-issue selection
+│   └── experimental/           Parallel UI pilot
 ├── .github/workflows/maven-ci.yml
 ├── scripts/
 │   ├── Allure-Category.ps1
@@ -99,7 +99,7 @@ Bakuelectronics.az_QA_Automation_Project/
     └── testdata/negative-search-data.json
 ```
 
-There are **29 main Java files, 108 test/support Java files, 12 root TestNG suites and 7 PowerShell scripts**. Some source directories differ from declared Java packages; suite references follow package declarations. Generated output belongs under ignored `target/`; optional local Allure tooling belongs under ignored `.allure/`.
+There are **29 main Java files, 108 test/support Java files, 12 TestNG suites under `suites/` and 7 PowerShell scripts**. Some source directories differ from declared Java packages; suite references follow package declarations. Generated output belongs under ignored `target/`; optional local Allure tooling belongs under ignored `.allure/`.
 
 ## Coverage and Test Organization
 
@@ -145,20 +145,22 @@ The previous unsupported population test was replaced, one for one, by `FastSear
 
 | Suite | Registered classes | Scope |
 | --- | ---: | --- |
-| [testng-offline.xml](testng-offline.xml) | 27 | Complete offline allowlist; Maven default and `offline` profile |
-| [testng-ui.xml](testng-ui.xml) | 20 | Standard UI; default protected-method exclusions leave 19 executing classes |
-| [testng-api.xml](testng-api.xml) | 10 | Standard API, including availability, populated expanded search, authentication and basket mutations |
-| [testng-api-known-issues.xml](testng-api-known-issues.xml) | 2 | POST-zero diagnostic and unauthorized safety blocker |
-| [testng-integration.xml](testng-integration.xml) | 2 | Public product comparison plus authenticated basket visibility |
-| [testng.xml](testng.xml) | 57 | Legacy combined regression: 23 offline, 12 API, 2 integration and 20 UI classes |
-| [testng-safe-full-run-with-integration.xml](testng-safe-full-run-with-integration.xml) | 16 | 3 offline, 2 public API, 1 public integration and 10 read-only UI classes |
-| [testng-parallel-ui-pilot.xml](testng-parallel-ui-pilot.xml) | 3 | Read-only browser pilot, parallel classes / 2 threads |
-| [testng-ui-extension.xml](testng-ui-extension.xml) | 8 | Additional search, filter, history, gallery and navigation journeys |
-| [testng-ui-extension-phase2.xml](testng-ui-extension-phase2.xml) | 4 | Query normalization, clear filters, unavailable product and reviews |
-| [testng-ui-extension-phase3.xml](testng-ui-extension-phase3.xml) | 4 | Installments, related products, mobile and keyboard navigation |
-| [testng-ui-extension-phase5.xml](testng-ui-extension-phase5.xml) | 2 | Deep-link state and card/detail price parity |
+| [suites/offline.xml](suites/offline.xml) | 27 | Complete offline allowlist; Maven default and `offline` profile |
+| [suites/ui.xml](suites/ui.xml) | 20 | Standard UI; default protected-method exclusions leave 19 executing classes |
+| [suites/api.xml](suites/api.xml) | 10 | Standard API, including availability, populated expanded search, authentication and basket mutations |
+| [suites/diagnostics/api-known-issues.xml](suites/diagnostics/api-known-issues.xml) | 2 | POST-zero diagnostic and unauthorized safety blocker |
+| [suites/integration.xml](suites/integration.xml) | 2 | Public product comparison plus authenticated basket visibility |
+| [suites/legacy-full.xml](suites/legacy-full.xml) | 57 | Legacy combined regression: 23 offline, 12 API, 2 integration and 20 UI classes |
+| [suites/safe-regression.xml](suites/safe-regression.xml) | 16 | 3 offline, 2 public API, 1 public integration and 10 read-only UI classes |
+| [suites/experimental/ui-parallel.xml](suites/experimental/ui-parallel.xml) | 3 | Read-only browser pilot, parallel classes / 2 threads |
+| [suites/ui-extensions/catalog-exploration.xml](suites/ui-extensions/catalog-exploration.xml) | 8 | Additional search, filter, history, gallery and navigation journeys |
+| [suites/ui-extensions/product-behavior.xml](suites/ui-extensions/product-behavior.xml) | 4 | Query normalization, clear filters, unavailable product and reviews |
+| [suites/ui-extensions/navigation-accessibility.xml](suites/ui-extensions/navigation-accessibility.xml) | 4 | Installments, related products, mobile and keyboard navigation |
+| [suites/ui-extensions/deep-link-pricing.xml](suites/ui-extensions/deep-link-pricing.xml) | 2 | Deep-link state and card/detail price parity |
 
-Extension filenames retain existing phase names as execution identifiers. Three authenticated cart classes and the invalid-slug diagnostic are outside XML registration. The combined `testng.xml` is not the complete source inventory or current offline allowlist; it includes known issues and mutations.
+Suite filenames describe their purpose; internal suite/test names and historical runner filenames remain unchanged to preserve reporting identities and existing entry points. The [suite layout audit](docs/SUITE_LAYOUT.md) records the old-to-new mapping, ordered membership and execution boundaries. Three authenticated cart classes and the invalid-slug diagnostic are outside XML registration. The combined `suites/legacy-full.xml` is not the complete source inventory or current offline allowlist; it includes known issues and mutations.
+
+In IntelliJ, right-click any XML under `suites/` and run it with TestNG using the repository root as the working directory. Live suites retain their existing approval requirements. Maven commands and PowerShell runners also run from the repository root; `mvn test` and `mvn -Poffline test` select only `suites/offline.xml`. The read-only `safe-regression.xml` still uses the live site and is not the offline default.
 
 ### Groups, data and retries
 
@@ -289,7 +291,7 @@ Reserve mutation accounts exclusively across machines/jobs. Guest cart tests nee
 ```powershell
 mvn test
 mvn -Poffline test
-mvn '-Dsurefire.suiteXmlFiles=testng-offline.xml' test
+mvn '-Dsurefire.suiteXmlFiles=suites/offline.xml' test
 
 # Focused offline checks, not the complete suite:
 mvn '-Dtest=PriceParsingArithmeticTest,CartPagePriceSummaryTest,WaitConditionResultTest' test
@@ -321,7 +323,7 @@ Direct Maven alternatives write default report locations. The second includes gu
 
 ```powershell
 mvn '-Dtest=HomePageLoadTest,CategoryNavigationTest,ProductSearchResultsTest' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
-mvn '-Dsurefire.suiteXmlFiles=testng-ui.xml' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
+mvn '-Dsurefire.suiteXmlFiles=suites/ui.xml' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
 ```
 
 Default `manual-auth,sensitive-auth` exclusions remove valid login and the wrong-password method. Category `-Test` accepts one exact class or `Class#method`, not lists, wildcards or individual data rows. Every targeted report is **PARTIAL**.
@@ -330,7 +332,7 @@ Default `manual-auth,sensitive-auth` exclusions remove valid login and the wrong
 
 ```powershell
 # LIVE standard public GETs; no credentials or intended mutations:
-mvn '-Dsurefire.suiteXmlFiles=testng-api.xml' '-Dgroups=public-api' test
+mvn '-Dsurefire.suiteXmlFiles=suites/api.xml' '-Dgroups=public-api' test
 
 # LIVE authenticated read; approval and credential preflight required:
 .\scripts\Allure-Category.ps1 Run api -Test BasketSnapshotReadTest -AllowLive
@@ -357,7 +359,7 @@ After separate approval for POST-zero mutations, use the diagnostic category:
 .\scripts\Allure-Category.ps1 Open api-known-issues
 ```
 
-The entire `api-known-issues` suite selects `BasketPostZeroQuantityTest` (may mutate) and `BasketUnauthorizedRequestTest`, which fails before HTTP. No flag bypasses the unauthorized guard. See the [API contract review](docs/API_CONTRACT_REVIEW.md). The legacy combined `testng.xml` deliberately retains both diagnostics and mutations; it is not the standard API suite.
+The entire `api-known-issues` suite selects `BasketPostZeroQuantityTest` (may mutate) and `BasketUnauthorizedRequestTest`, which fails before HTTP. No flag bypasses the unauthorized guard. See the [API contract review](docs/API_CONTRACT_REVIEW.md). The legacy combined `suites/legacy-full.xml` deliberately retains both diagnostics and mutations; it is not the standard API suite.
 
 ### API/UI integration
 
@@ -369,7 +371,7 @@ The entire `api-known-issues` suite selects `BasketPostZeroQuantityTest` (may mu
 .\scripts\Allure-Category.ps1 Run integration -AllowLive
 
 # Equivalent full integration suite:
-mvn '-Dsurefire.suiteXmlFiles=testng-integration.xml' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
+mvn '-Dsurefire.suiteXmlFiles=suites/integration.xml' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
 ```
 
 ### Smoke, regression and other groups
@@ -377,14 +379,14 @@ mvn '-Dsurefire.suiteXmlFiles=testng-integration.xml' '-Dtest.retry.max=0' '-Dsu
 These are TestNG groups, not Maven profiles. Both UI examples execute live tests and include guest mutations:
 
 ```powershell
-mvn '-Dsurefire.suiteXmlFiles=testng-ui.xml' '-Dgroups=smoke' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
-mvn '-Dsurefire.suiteXmlFiles=testng-ui.xml' '-Dgroups=regression' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
+mvn '-Dsurefire.suiteXmlFiles=suites/ui.xml' '-Dgroups=smoke' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
+mvn '-Dsurefire.suiteXmlFiles=suites/ui.xml' '-Dgroups=regression' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
 ```
 
 Explicit public read-only API group:
 
 ```powershell
-mvn '-Dsurefire.suiteXmlFiles=testng-api.xml' '-Dgroups=public-api' test
+mvn '-Dsurefire.suiteXmlFiles=suites/api.xml' '-Dgroups=public-api' test
 ```
 
 The category runner has no `-Groups` / `-Group` option and does not forward arbitrary Maven flags. Group commands use default Maven output unless both report directories are overridden; see the isolated reporting example below.
@@ -394,8 +396,8 @@ The category runner has no `-Groups` / `-Group` option and does not forward arbi
 These contact live services and open Chrome:
 
 ```powershell
-mvn '-Dsurefire.suiteXmlFiles=testng-safe-full-run-with-integration.xml' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
-mvn '-Dsurefire.suiteXmlFiles=testng-parallel-ui-pilot.xml' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
+mvn '-Dsurefire.suiteXmlFiles=suites/safe-regression.xml' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
+mvn '-Dsurefire.suiteXmlFiles=suites/experimental/ui-parallel.xml' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
 ```
 
 The pilot runs three read-only classes on two threads. It does not establish general parallel reliability or permit parallel account mutations. Keep account changes sequential; avoid simultaneous Maven builds sharing compiled output.
@@ -415,7 +417,7 @@ Add `-CachedDependencies` only after caching dependencies. The third/fourth scri
 The legacy combined selection includes authentication, guest/account mutations and known API issues. Obtain approval for all effects; it is not an all-green acceptance command:
 
 ```powershell
-mvn '-Dsurefire.suiteXmlFiles=testng.xml' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
+mvn '-Dsurefire.suiteXmlFiles=suites/legacy-full.xml' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
 ```
 
 ## Protected Authentication and Cart Execution
@@ -558,7 +560,7 @@ For a separately approved live smoke run, isolate both directories and render wi
 
 ```powershell
 $groupRun = Join-Path $PWD ('target/selected-groups/smoke-' + [guid]::NewGuid().ToString('N'))
-mvn '-Dsurefire.suiteXmlFiles=testng-ui.xml' '-Dgroups=smoke' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' "-Dtest.reports.directory=$groupRun/surefire" "-Dallure.results.directory=$groupRun/results" test
+mvn '-Dsurefire.suiteXmlFiles=suites/ui.xml' '-Dgroups=smoke' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' "-Dtest.reports.directory=$groupRun/surefire" "-Dallure.results.directory=$groupRun/results" test
 $groupMavenExit = $LASTEXITCODE
 # Report available failures too; generation does not change the Maven outcome.
 allure generate "$groupRun/results" -o "$groupRun/report" --name "PARTIAL smoke selection - Maven exit $groupMavenExit"

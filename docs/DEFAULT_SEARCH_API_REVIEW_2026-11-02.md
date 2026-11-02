@@ -105,7 +105,7 @@ Surefire reruns were set to zero; the offline suite retained its existing retry-
 
 | Selection | Actual outcome |
 | --- | --- |
-| Full `testng-offline.xml` via `-Poffline` | **330 PASS**, 0 failures/errors/skips; Maven exit 0. |
+| Full `suites/offline.xml` via `-Poffline` | **330 PASS**, 0 failures/errors/skips; Maven exit 0. |
 | Both public default-search classes | **2 FAIL**, 0 errors/skips; Maven exit 1, preserved. |
 | `BasketSnapshotReadTest` | **1 PASS**, 0 failures/errors/skips; Maven exit 0. |
 | `ProductApiUiConsistencyTest` | **1 PASS**, 0 failures/errors/skips; Maven exit 0. Fallback supplied usable product; UI route/identity/discounted price checks passed. |

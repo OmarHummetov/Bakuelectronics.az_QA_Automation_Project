@@ -12,7 +12,7 @@ $expected = @('SearchQueryNormalizationTest', 'ClearAllFiltersTest',
 $settings = New-Object System.Xml.XmlReaderSettings
 $settings.DtdProcessing = [System.Xml.DtdProcessing]::Ignore
 $settings.XmlResolver = $null
-$reader = [System.Xml.XmlReader]::Create((Join-Path $repo 'testng-ui-extension-phase2.xml'), $settings)
+$reader = [System.Xml.XmlReader]::Create((Join-Path $repo 'suites/ui-extensions/product-behavior.xml'), $settings)
 try { $suite = New-Object System.Xml.XmlDocument; $suite.Load($reader) } finally { $reader.Dispose() }
 $selected = @($suite.SelectNodes('//class') | ForEach-Object { $_.GetAttribute('name') })
 if ($selected.Count -ne 4 -or @(Compare-Object $selected $expected).Count -ne 0 -or $suite.SelectNodes('//package').Count) {
@@ -27,7 +27,7 @@ $runId = (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString
 $runRoot = Join-Path $repo "target/allure/ui-extension-phase2/$runId"
 New-Item -ItemType Directory -Path "$runRoot/results" | Out-Null
 $arguments = @('--batch-mode', '--no-transfer-progress', '-Daether.syncContext.named.factory=rwlock-local',
-    '-Dsurefire.suiteXmlFiles=testng-ui-extension-phase2.xml', '-Dtest.retry.max=0', '-Dsurefire.rerunFailingTestsCount=0',
+    '-Dsurefire.suiteXmlFiles=suites/ui-extensions/product-behavior.xml', '-Dtest.retry.max=0', '-Dsurefire.rerunFailingTestsCount=0',
     "-Dallure.results.directory=$runRoot/results", "-Dtest.reports.directory=$runRoot/surefire", 'test')
 if ($CachedDependencies) { $arguments = @('--offline') + $arguments }
 $started = (Get-Date).ToString('o')
@@ -47,7 +47,7 @@ try {
         else { 'GUEST UI EXTENSION PHASE 2 - FAILED OR INCOMPLETE RUN' }
     & $AllureCli generate "$runRoot/results" -o "$runRoot/report" --name $title
     $allureExit = $LASTEXITCODE
-    [ordered]@{ runId = $runId; suite = 'testng-ui-extension-phase2.xml'; classes = $expected;
+    [ordered]@{ runId = $runId; suite = 'suites/ui-extensions/product-behavior.xml'; classes = $expected;
         started = $started; completed = (Get-Date).ToString('o'); mavenExitCode = $mavenExit;
         allureExitCode = $allureExit; resultCount = $results.Count;
         statuses = @($results | Group-Object status | Select-Object Name, Count);

@@ -104,7 +104,7 @@ and zero live result image files. No original strict requirement was changed or 
 - `src/test/java/az/bakuelectronics/automation/unit/CartSummaryConsistencyContractTest.java`: eleven focused corruption/ambiguity/independence checks.
 - `src/test/java/az/bakuelectronics/automation/support/SensitiveTestReporting.java`: exact-method authorization for the new class.
 - `src/test/java/az/bakuelectronics/automation/support/AuthenticatedUiApprovalTest.java`: include the new class in approval checks.
-- `testng-offline.xml`: append the new offline class while preserving all previous invocations.
+- `suites/offline.xml`: append the new offline class while preserving all previous invocations.
 - This execution record.
 
 The strict authenticated test, both guest tests, `CartSnapshot`, authentication/recovery support, private

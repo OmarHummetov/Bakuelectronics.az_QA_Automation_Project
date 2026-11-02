@@ -16,7 +16,7 @@ $Category = $Category.ToLowerInvariant()
 $repo = Split-Path $PSScriptRoot -Parent
 $categoryRoot = Join-Path $repo "target/allure/$Category"
 $idPattern = '^\d{8}-\d{6}-[a-f0-9]{8}$'
-$suites = [ordered]@{ unit = 'testng-offline.xml'; api = 'testng-api.xml'; 'api-known-issues' = 'testng-api-known-issues.xml'; integration = 'testng-integration.xml'; ui = 'testng-ui.xml' }
+$suites = [ordered]@{ unit = 'suites/offline.xml'; api = 'suites/api.xml'; 'api-known-issues' = 'suites/diagnostics/api-known-issues.xml'; integration = 'suites/integration.xml'; ui = 'suites/ui.xml' }
 $titles = @{ unit = 'Unit / Offline Tests'; api = 'Standard API Tests'; 'api-known-issues' = 'API Known Issues Diagnostics'; integration = 'Integration Tests'; ui = 'UI Tests' }
 
 function Read-Suite([string]$Path) {

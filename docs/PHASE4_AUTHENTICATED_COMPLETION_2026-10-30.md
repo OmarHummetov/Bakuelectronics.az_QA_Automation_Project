@@ -96,7 +96,7 @@ represented as a passing whole test.
 - `src/test/java/az/bakuelectronics/automation/support/AuthenticatedUiApprovalTest.java`: cover the new exact selection and existing rejected selections.
 - `src/test/java/az/bakuelectronics/automation/support/AuthenticatedLandingWaitTest.java`: three focused offline checks for redirect/title readiness, mandatory origin/title conditions, and diagnostic confidentiality.
 - `src/test/java/az/bakuelectronics/automation/ui/AuthenticatedMultipleProductsCartCalculationTest.java`: fixed PASS evidence for completed price/removal assertions and test-owned displayed monetary amounts.
-- `testng-offline.xml`: append the three new offline invocations; preserve the previous 317.
+- `suites/offline.xml`: append the three new offline invocations; preserve the previous 317.
 - This follow-up record.
 
 `CartPage`, `CartSnapshot`, ownership/recovery rules, the two guest tests, and both existing BE-UI defect

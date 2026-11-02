@@ -95,7 +95,7 @@ Created:
 Modified:
 
 - `src/main/java/az/bakuelectronics/automation/pages/CartPage.java`
-- `testng-offline.xml`, `testng.xml`: append one offline class; retain existing entries and live membership
+- `suites/offline.xml`, `suites/legacy-full.xml`: append one offline class; retain existing entries and live membership
 - `scripts/Test-AllureWorkflow.ps1`: classify the new offline and two opt-in UI classes; require a sequential Phase 4 suite
 - `README.md`, `docs/allure-categories.md`: bilingual scope, blocker and evidence
 

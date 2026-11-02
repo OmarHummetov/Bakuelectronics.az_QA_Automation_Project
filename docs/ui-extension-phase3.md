@@ -155,7 +155,7 @@ Created:
 - `src/main/java/az/bakuelectronics/automation/pages/RelatedProductsComponent.java`
 - `src/main/java/az/bakuelectronics/automation/pages/CatalogNavigationComponent.java`
 - Four UI classes listed above under `src/test/java/az/bakuelectronics/automation/ui/`.
-- `testng-ui-extension-phase3.xml`
+- `suites/ui-extensions/navigation-accessibility.xml`
 - `scripts/Run-UiExtensionPhase3.ps1`
 - `docs/ui-extension-phase3.md`
 

@@ -128,7 +128,7 @@ public class RetryPolicyTest {
         factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
         var parser = factory.newDocumentBuilder();
         var xpath = XPathFactory.newInstance().newXPath();
-        var suite = parser.parse(Path.of("testng.xml").toFile());
+        var suite = parser.parse(Path.of("suites/legacy-full.xml").toFile());
         String transformer = RetryAnnotationTransformer.class.getName();
         Assert.assertEquals(xpath.evaluate("count(/suite/listeners/listener[@class-name='"
                 + transformer + "'])", suite), "1");

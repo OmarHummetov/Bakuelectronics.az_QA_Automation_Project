@@ -14,7 +14,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <surefire.suiteXmlFiles>testng-offline.xml</surefire.suiteXmlFiles>
+        <surefire.suiteXmlFiles>suites/offline.xml</surefire.suiteXmlFiles>
 
         <test.excludedGroups>manual-auth,sensitive-auth</test.excludedGroups>
         <test.reports.directory>${project.build.directory}/surefire-reports</test.reports.directory>
@@ -111,7 +111,7 @@
         <profile>
             <id>offline</id>
             <properties>
-                <surefire.suiteXmlFiles>testng-offline.xml</surefire.suiteXmlFiles>
+                <surefire.suiteXmlFiles>suites/offline.xml</surefire.suiteXmlFiles>
             </properties>
         </profile>
     </profiles>

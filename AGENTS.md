@@ -4,7 +4,7 @@
 - Baku Electronics QA Automation final project: Java 23, Maven, Selenium, TestNG, REST Assured, Page Object Model (POM), and Allure.
 - Course coverage requirements: at least 10 UI tests, 6 API tests covering GET and POST plus PUT or PATCH and DELETE, and 1 UI+API integration test. Preserve this coverage when changing tests.
 - Main code is under `src/main/java/az/bakuelectronics/automation/` (`api`, `config`, `driver`, `models`, `pages`, `utils`). Tests are under `src/test/java/az/bakuelectronics/automation/` (`ui`, `api`, `integration`, `support`, `unit`).
-- `pom.xml` defines dependencies/build; `testng.xml` is the full regression suite; CI compiles and runs `WaitConditionResultTest`.
+- `pom.xml` defines dependencies/build; `suites/offline.xml` is the safe Maven default; `suites/legacy-full.xml` retains the legacy combined regression. CI compiles and runs the complete offline suite. Suite layout and execution boundaries are documented in `docs/SUITE_LAYOUT.md`.
 
 ## Implementation rules
 - Preserve the existing architecture and working tests. Follow established POM and `DriverManager` patterns.

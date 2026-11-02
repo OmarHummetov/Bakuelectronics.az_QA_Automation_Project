@@ -130,10 +130,10 @@ Other existing files updated for references/documentation:
 - src/test/java/az/bakuelectronics/automation/support/SensitiveReportingTest.java
 - src/test/java/az/bakuelectronics/automation/support/SensitiveTestReporting.java
 - src/test/java/az/bakuelectronics/automation/unit/api/InvalidProductSlugSafetyTest.java
-- testng-offline.xml
-- testng-parallel-ui-pilot.xml
-- testng-safe-full-run-with-integration.xml
-- testng.xml
+- suites/offline.xml
+- suites/experimental/ui-parallel.xml
+- suites/safe-regression.xml
+- suites/legacy-full.xml
 
 ## Final naming adjustment
 
@@ -160,7 +160,7 @@ Changed files (renames counted once):
 - src/test/java/az/bakuelectronics/automation/ui/CartContentsTest.java
 - src/test/java/az/bakuelectronics/automation/api/BasketPostZeroQuantityTest.java
 - src/test/java/az/bakuelectronics/automation/support/RetryAttachmentTest.java
-- testng.xml
+- suites/legacy-full.xml
 - README.md
 - docs/test-naming-inventory.md
 

@@ -12,9 +12,9 @@ sanitized summaries belong in the final presentation.
 
 ## Standard API execution inventory
 
-`testng-api.xml` now explicitly selects **10 standard methods**, excluding
+`suites/api.xml` now explicitly selects **10 standard methods**, excluding
 `BasketPostZeroQuantityTest` and `BasketUnauthorizedRequestTest`. Both remain intact
-and explicitly selectable in `testng-api-known-issues.xml` through the
+and explicitly selectable in `suites/diagnostics/api-known-issues.xml` through the
 `api-known-issues` category, with separate results/reports. The unchanged full
 regression XML still lists all 12 core tests. No live suite was run for this split;
 10 selected tests is not a new 10 PASS result or an all-12 PASS claim.

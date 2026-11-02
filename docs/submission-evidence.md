@@ -6,8 +6,8 @@ The historical evidence review below inspected existing local run metadata, Mave
 Allure results only. No tests, authentication, network requests or basket operations
 were performed. Dates and times use Asia/Baku. Tests, assertions, suites and production
 behavior were unchanged by that evidence review. The subsequent suite separation
-changes selection only: `testng-api.xml` lists **10** standard methods and
-`testng-api-known-issues.xml` lists **2** diagnostic methods. Test bodies, all 14
+changes selection only: `suites/api.xml` lists **10** standard methods and
+`suites/diagnostics/api-known-issues.xml` lists **2** diagnostic methods. Test bodies, all 14
 groups, assertions, guards, cleanup and production behavior are unchanged. See
 [README commands 38/38a](../README.md#separate-category-report-commands) for separate
 Run/Generate/Open procedures. No live tests or new reports were produced for the
@@ -64,8 +64,8 @@ From the repository root, open only (no test execution):
 
 ### Azərbaycan dilində — cari təqdimat sübutları
 
-Cari suite ayrılması: `testng-api.xml` **10** standart metod, ayrıca
-`testng-api-known-issues.xml` **2** diaqnostik metod seçir. POST-zero və Unauthorized
+Cari suite ayrılması: `suites/api.xml` **10** standart metod, ayrıca
+`suites/diagnostics/api-known-issues.xml` **2** diaqnostik metod seçir. POST-zero və Unauthorized
 testləri, assertion-lar, 14 qrup, qoruyucular və bərpa dəyişməyib. Yeni canlı icra və
 hesabat yaradılmayıb; əvvəlki hesabatlar dəyişməyib. On testin seçilməsi yeni 10 PASS
 və ya bütün 12 testin keçməsi deyil. Dəqiq ayrıca əmrlər README 38/38a-dadır.

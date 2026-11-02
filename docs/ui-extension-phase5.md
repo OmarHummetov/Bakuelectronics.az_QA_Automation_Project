@@ -104,7 +104,7 @@ Created:
 - `src/main/java/az/bakuelectronics/automation/pages/ProductPriceComponent.java`
 - `src/test/java/az/bakuelectronics/automation/ui/CategoryFilterDeepLinkStateTest.java`
 - `src/test/java/az/bakuelectronics/automation/ui/ProductCardDetailPriceParityTest.java`
-- `testng-ui-extension-phase5.xml`
+- `suites/ui-extensions/deep-link-pricing.xml`
 - `scripts/Run-UiExtensionPhase5.ps1`
 - `docs/ui-extension-phase5.md`
 

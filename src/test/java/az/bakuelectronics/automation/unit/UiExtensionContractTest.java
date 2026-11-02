@@ -143,15 +143,15 @@ public class UiExtensionContractTest {
 
     @Test
     public void phaseFiveSelectsExactlyTwoReadOnlyMethodsOutsideAllPreviousSuites() throws Exception {
-        var selected = classes("testng-ui-extension-phase5.xml");
+        var selected = classes("suites/ui-extensions/deep-link-pricing.xml");
         Assert.assertEquals(selected, Set.of("az.bakuelectronics.automation.ui.CategoryFilterDeepLinkStateTest",
                 "az.bakuelectronics.automation.ui.ProductCardDetailPriceParityTest"));
-        Assert.assertEquals(xml("testng-ui-extension-phase5.xml").getElementsByTagName("package").getLength(), 0);
+        Assert.assertEquals(xml("suites/ui-extensions/deep-link-pricing.xml").getElementsByTagName("package").getLength(), 0);
         for (String name : selected) {
-            for (String previous : List.of("testng.xml", "testng-ui.xml", "testng-offline.xml", "testng-api.xml",
-                    "testng-api-known-issues.xml", "testng-integration.xml", "testng-safe-full-run-with-integration.xml",
-                    "testng-parallel-ui-pilot.xml", "testng-ui-extension.xml", "testng-ui-extension-phase2.xml",
-                    "testng-ui-extension-phase3.xml")) {
+            for (String previous : List.of("suites/legacy-full.xml", "suites/ui.xml", "suites/offline.xml", "suites/api.xml",
+                    "suites/diagnostics/api-known-issues.xml", "suites/integration.xml", "suites/safe-regression.xml",
+                    "suites/experimental/ui-parallel.xml", "suites/ui-extensions/catalog-exploration.xml", "suites/ui-extensions/product-behavior.xml",
+                    "suites/ui-extensions/navigation-accessibility.xml")) {
                 Assert.assertFalse(classes(previous).contains(name), "Phase 5 leaked into " + previous);
             }
             var methods = Arrays.stream(Class.forName(name).getDeclaredMethods())
@@ -181,15 +181,15 @@ public class UiExtensionContractTest {
 
     @Test
     public void phaseThreeIsExplicitReadOnlyAndDisjointFromPreviousSuites() throws Exception {
-        var selected = classes("testng-ui-extension-phase3.xml");
+        var selected = classes("suites/ui-extensions/navigation-accessibility.xml");
         Assert.assertEquals(selected, Set.of("az.bakuelectronics.automation.ui.InstallmentOptionsConsistencyTest",
                 "az.bakuelectronics.automation.ui.RelatedProductsNavigationTest",
                 "az.bakuelectronics.automation.ui.MobileResponsiveNavigationTest",
                 "az.bakuelectronics.automation.ui.KeyboardAccessibilityNavigationTest"));
-        Assert.assertEquals(xml("testng-ui-extension-phase3.xml").getElementsByTagName("package").getLength(), 0);
+        Assert.assertEquals(xml("suites/ui-extensions/navigation-accessibility.xml").getElementsByTagName("package").getLength(), 0);
         for (String name : selected) {
-            for (String previous : List.of("testng.xml", "testng-ui.xml", "testng-offline.xml",
-                    "testng-ui-extension.xml", "testng-ui-extension-phase2.xml")) {
+            for (String previous : List.of("suites/legacy-full.xml", "suites/ui.xml", "suites/offline.xml",
+                    "suites/ui-extensions/catalog-exploration.xml", "suites/ui-extensions/product-behavior.xml")) {
                 Assert.assertFalse(classes(previous).contains(name), "Phase 3 leaked into " + previous);
             }
             int count = 0;
@@ -236,14 +236,14 @@ public class UiExtensionContractTest {
 
     @Test
     public void phaseTwoHasExactlyFourIsolatedReadOnlyMethods() throws Exception {
-        var phaseTwo = classes("testng-ui-extension-phase2.xml");
+        var phaseTwo = classes("suites/ui-extensions/product-behavior.xml");
         Assert.assertEquals(phaseTwo, Set.of("az.bakuelectronics.automation.ui.SearchQueryNormalizationTest",
                 "az.bakuelectronics.automation.ui.ClearAllFiltersTest",
                 "az.bakuelectronics.automation.ui.OutOfStockPurchaseRestrictionTest",
                 "az.bakuelectronics.automation.ui.ProductReviewSectionTest"));
-        Assert.assertEquals(xml("testng-ui-extension-phase2.xml").getElementsByTagName("package").getLength(), 0);
+        Assert.assertEquals(xml("suites/ui-extensions/product-behavior.xml").getElementsByTagName("package").getLength(), 0);
         for (String name : phaseTwo) {
-            for (String suite : List.of("testng.xml", "testng-ui.xml", "testng-offline.xml", "testng-ui-extension.xml")) {
+            for (String suite : List.of("suites/legacy-full.xml", "suites/ui.xml", "suites/offline.xml", "suites/ui-extensions/catalog-exploration.xml")) {
                 Assert.assertFalse(classes(suite).contains(name), "Phase 2 leaked into " + suite);
             }
             int methods = 0;
@@ -260,7 +260,7 @@ public class UiExtensionContractTest {
             Assert.assertEquals(methods, 1, name);
             Assert.assertNotNull(Class.forName(name).getAnnotation(io.qameta.allure.Feature.class));
         }
-        var excludes = xml("testng-ui-extension-phase2.xml").getElementsByTagName("exclude");
+        var excludes = xml("suites/ui-extensions/product-behavior.xml").getElementsByTagName("exclude");
         Set<String> names = new LinkedHashSet<>();
         for (int i = 0; i < excludes.getLength(); i++) names.add(((org.w3c.dom.Element) excludes.item(i)).getAttribute("name"));
         Assert.assertEquals(names, Set.of("manual-auth", "sensitive-auth"));
@@ -317,7 +317,7 @@ public class UiExtensionContractTest {
 
     @Test
     public void fullSuiteRetainsExactStandardUiSelection() throws Exception {
-        Document full = xml("testng.xml");
+        Document full = xml("suites/legacy-full.xml");
         var tests = full.getElementsByTagName("test");
         Set<String> selected = new LinkedHashSet<>();
         for (int i = 0; i < tests.getLength(); i++) {
@@ -329,17 +329,17 @@ public class UiExtensionContractTest {
                 Assert.assertEquals(test.getElementsByTagName("exclude").getLength(), 2, "Protected auth exclusions remain");
             }
         }
-        Assert.assertEquals(selected, classes("testng-ui.xml"));
+        Assert.assertEquals(selected, classes("suites/ui.xml"));
         Assert.assertEquals(selected.size(), 20);
     }
 
     @Test
     public void extensionHasExactlyEightReadOnlyMethodsWithoutRetries() throws Exception {
-        Set<String> extension = classes("testng-ui-extension.xml");
+        Set<String> extension = classes("suites/ui-extensions/catalog-exploration.xml");
         Assert.assertEquals(extension.size(), 8);
         int methods = 0;
         for (String name : extension) {
-            Assert.assertFalse(classes("testng-ui.xml").contains(name));
+            Assert.assertFalse(classes("suites/ui.xml").contains(name));
             for (var method : Class.forName(name).getDeclaredMethods()) {
                 Test annotation = method.getAnnotation(Test.class);
                 if (annotation == null) continue;
@@ -356,7 +356,7 @@ public class UiExtensionContractTest {
     public void standardSelectionStillProducesTwentyTwoInvocations() throws Exception {
         int methods = 0;
         int invocations = 0;
-        for (String name : classes("testng-ui.xml")) {
+        for (String name : classes("suites/ui.xml")) {
             Class<?> type = Class.forName(name);
             for (var method : type.getDeclaredMethods()) {
                 Test annotation = method.getAnnotation(Test.class);
@@ -379,7 +379,7 @@ public class UiExtensionContractTest {
 
     @Test
     public void protectedAuthenticationGroupsRemainExcluded() throws Exception {
-        for (String path : List.of("testng-ui.xml", "testng-ui-extension.xml")) {
+        for (String path : List.of("suites/ui.xml", "suites/ui-extensions/catalog-exploration.xml")) {
             var excludes = xml(path).getElementsByTagName("exclude");
             Set<String> names = new LinkedHashSet<>();
             for (int i = 0; i < excludes.getLength(); i++) {

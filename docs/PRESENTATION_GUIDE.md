@@ -62,9 +62,9 @@ Example **live read-only** selections (documented, not executed here):
 
 ```powershell
 # Eight Phase 1 guest read-only classes, narrowed by group.
-mvn '-Dsurefire.suiteXmlFiles=testng-ui-extension.xml' '-Dgroups=regression' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
+mvn '-Dsurefire.suiteXmlFiles=suites/ui-extensions/catalog-exploration.xml' '-Dgroups=regression' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
 # Three read-only classes, two class threads; no account/cart tests.
-mvn '-Dsurefire.suiteXmlFiles=testng-parallel-ui-pilot.xml' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
+mvn '-Dsurefire.suiteXmlFiles=suites/experimental/ui-parallel.xml' '-Dtest.retry.max=0' '-Dsurefire.rerunFailingTestsCount=0' test
 ```
 
 The pilot is homepage/category/search only; it is not a general parallel mutation mode. The full regression XML includes authenticated/mutation tests and genuine known failures. Do not use it as a safe public demo. Phase 4 runner without `-OfflineValidation` blocks before browser/Maven; with that flag it runs only offline contracts, not the two live scenarios. No login/mutation command is authorized by this guide.

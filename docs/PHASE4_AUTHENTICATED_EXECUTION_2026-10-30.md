@@ -62,7 +62,7 @@ Updated:
 - `src/main/java/az/bakuelectronics/automation/pages/LoginPage.java`: bounded post-password wait overload for manual MFA.
 - `src/test/java/az/bakuelectronics/automation/support/SensitiveTestReporting.java`: exact-method personal-account allowlist additions.
 - `src/test/java/az/bakuelectronics/automation/support/AuthenticatedUiApprovalTest.java`: cover both new allowlisted methods and rejected selections.
-- `testng-offline.xml`: add ownership/journal/account-snapshot offline coverage.
+- `suites/offline.xml`: add ownership/journal/account-snapshot offline coverage.
 - `docs/authenticated-ui-safety.md`: link the newly authorized cart extension while retaining the prior login-only history.
 
 No Git staging, commit, or push was performed. Previous suites, reports, and bug evidence were retained.

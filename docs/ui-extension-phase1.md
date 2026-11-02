@@ -48,10 +48,10 @@ Snapshots and ordinary failure diagnostics/screenshots are attached to Allure.
 
 ### Selection and commands
 
-`testng-ui-extension.xml` explicitly selects only these eight classes. `testng-ui.xml` is unchanged.
-The full `testng.xml` UI package scan was replaced by the exact standard 20-class list and retains both protected-auth exclusions.
+`suites/ui-extensions/catalog-exploration.xml` explicitly selects only these eight classes. `suites/ui.xml` is unchanged.
+The full `suites/legacy-full.xml` UI package scan was replaced by the exact standard 20-class list and retains both protected-auth exclusions.
 The standard selection remains 20 selected methods / 22 invocations from 19 classes. Nine offline contract checks were added
-to `testng-offline.xml` and the full suite, preserving the 242 baseline checks (251 total).
+to `suites/offline.xml` and the full suite, preserving the 242 baseline checks (251 total).
 The standard category runner still owns its existing categories; the extension uses its own runner and output root.
 
 ```powershell
@@ -98,8 +98,8 @@ Qalereyada seçilmiş şəkil yüklənməli, breadcrumb isə əvvəl qeydə alı
 Nəticə surəti 20 saniyə daxilində ən azı üç uyğun yoxlama və 1.2 saniyə sabitlik tələb edir.
 Sabit gecikmə, kor-koranə retry, zəiflədilmiş assertion və süni PASS yoxdur. Məlum məhsul və DOM əlçatmaz olduqda test uğursuz olur.
 
-`testng-ui.xml` dəyişməyib: **20 seçilmiş metod / 22 standart çağırış** saxlanılır.
-`testng.xml` daxilində UI paket skanı eyni 20 standart sinfin açıq siyahısı ilə əvəz edilib; qorunan giriş istisnaları saxlanılıb.
+`suites/ui.xml` dəyişməyib: **20 seçilmiş metod / 22 standart çağırış** saxlanılır.
+`suites/legacy-full.xml` daxilində UI paket skanı eyni 20 standart sinfin açıq siyahısı ilə əvəz edilib; qorunan giriş istisnaları saxlanılıb.
 Əlavə 9 offline yoxlama ilə əvvəlki **242** baza yoxlaması qorunur, ümumi offline say **251** olur.
 
 Yuxarıdakı PowerShell bloku Java 23 kompilyasiyasını, təhlükəsiz offline yoxlamanı və sonra yalnız yeni canlı qonaq dəstini işlədir.
@@ -123,7 +123,7 @@ Created / Yaradılıb:
 - `src/main/java/az/bakuelectronics/automation/pages/ProductGalleryComponent.java`
 - `src/test/java/az/bakuelectronics/automation/support/UiExtensionSupport.java`
 - `src/test/java/az/bakuelectronics/automation/unit/UiExtensionContractTest.java`
-- `testng-ui-extension.xml`
+- `suites/ui-extensions/catalog-exploration.xml`
 - `scripts/Run-UiExtension.ps1`
 - `docs/ui-extension-phase1.md`
 
@@ -133,14 +133,14 @@ Modified / Dəyişdirilib:
 - `src/main/java/az/bakuelectronics/automation/pages/SearchPage.java`
 - `src/main/java/az/bakuelectronics/automation/pages/CategoryPage.java`
 - `src/main/java/az/bakuelectronics/automation/pages/ProductPage.java`
-- `testng.xml`
-- `testng-offline.xml`
+- `suites/legacy-full.xml`
+- `suites/offline.xml`
 - `scripts/Test-AllureWorkflow.ps1`
 - `README.md`
 - `docs/allure-categories.md`
 
-`testng-ui.xml`, existing UI test sources, authentication guards, retry policy and historical reports are unchanged.
-`testng-ui.xml`, əvvəlki UI testləri, autentifikasiya qoruyucuları, retry siyasəti və tarixi hesabatlar dəyişməyib.
+`suites/ui.xml`, existing UI test sources, authentication guards, retry policy and historical reports are unchanged.
+`suites/ui.xml`, əvvəlki UI testləri, autentifikasiya qoruyucuları, retry siyasəti və tarixi hesabatlar dəyişməyib.
 
 ## Live execution evidence / Canlı icra sübutları
 
@@ -189,5 +189,5 @@ Offline evidence: `target/phase1-offline-baseline-20261028/` (242 PASS),
 `target/phase1-offline-sparse-price-fix-20261028/` (251 PASS), and
 `target/phase1-history-fixture-validation-20261028/` (final compilation and 9 focused PASS).
 Static workflow validation passed with 156 XML references and 124 README PowerShell examples.
-`testng-ui.xml` SHA-256 before/after: `371D3929F8A83F34C48D7657C7D2C9BA65BFCD09A5B2510A64617B9149AD299B`.
+`suites/ui.xml` SHA-256 before/after: `371D3929F8A83F34C48D7657C7D2C9BA65BFCD09A5B2510A64617B9149AD299B`.
 No Git operations were performed. / Git əməliyyatları aparılmayıb.

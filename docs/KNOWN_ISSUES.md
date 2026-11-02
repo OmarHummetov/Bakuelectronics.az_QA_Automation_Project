@@ -25,7 +25,7 @@ Actual replacement verification (Oracle Java 23.0.2, retries/reruns disabled for
 | Selection | Actual result |
 | --- | --- |
 | Standalone TestNG `-testclass az.bakuelectronics.automation.api.FastSearchExpandedContractTest`, no suite XML | **1 PASS, 0 FAIL, 0 SKIP**, exit 0 |
-| Standard `testng-api.xml` with `-groups public-api` | **2 PASS, 0 FAIL, 0 SKIP**, exit 0 |
+| Standard `suites/api.xml` with `-groups public-api` | **2 PASS, 0 FAIL, 0 SKIP**, exit 0 |
 | Existing public `ProductApiUiConsistencyTest` | **1 PASS, 0 FAIL, 0 SKIP**, exit 0; exact slug/model and discounted price 899.99 AZN |
 | Full offline allowlist, existing retry-policy fixtures retained | **330 PASS, 0 FAIL, 0 ERROR, 0 SKIP**, Maven exit 0 |
 | Offline full-method/ordered-parameter identity comparison | **330 -> 330**, zero missing, added or non-passed records |
